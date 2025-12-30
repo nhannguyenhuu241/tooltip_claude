@@ -71,6 +71,8 @@ cp tooltip_claude/.claude/statusline.* your-project/.claude/
 
 Xem chi tiết tại [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)
 
+> **Gặp vấn đề kết nối?** Xem [NETWORK_GUIDE.md](NETWORK_GUIDE.md) để cấu hình bypass proxy, VPN, SSH tunnel...
+
 ---
 
 ## Cấu Trúc Repository
