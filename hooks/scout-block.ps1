@@ -1,5 +1,11 @@
 # scout-block.ps1 - PowerShell implementation for blocking heavy directories
-# Blocks: node_modules, __pycache__, .git/, dist/, build/
+# Reads patterns from .ckignore file (defaults: node_modules, __pycache__, .git, dist, build)
+#
+# Blocking Rules:
+# - File paths: Blocks any file_path/path/pattern containing blocked directories
+# - Bash commands: Blocks directory access (cd, ls, cat, etc.) but ALLOWS build commands
+#   - Blocked: cd node_modules, ls build/, cat dist/file.js
+#   - Allowed: npm build, pnpm build, yarn build, npm run build
 
 # Read JSON input from stdin
 $inputJson = $input | Out-String
@@ -24,39 +30,60 @@ if (-not $hookData.tool_input) {
     exit 2
 }
 
-if (-not $hookData.tool_input.command) {
-    Write-Error "ERROR: Invalid JSON structure - missing command"
-    exit 2
+# Extract tool input
+$toolInput = $hookData.tool_input
+
+# Determine script directory and .claude folder for .ckignore lookup
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$claudeDir = Split-Path -Parent $scriptDir
+$ckignoreFile = Join-Path $claudeDir ".ckignore"
+
+# Default blocked patterns
+$blockedPatterns = @('node_modules', '__pycache__', '\.git', 'dist', 'build')
+
+# Read patterns from .ckignore if it exists
+if (Test-Path $ckignoreFile) {
+    $patterns = Get-Content $ckignoreFile |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { $_ -and -not $_.StartsWith('#') }
+    if ($patterns.Count -gt 0) {
+        # Escape special regex characters
+        $blockedPatterns = $patterns | ForEach-Object { [regex]::Escape($_) }
+    }
 }
 
-# Extract command from hook input
-$command = $hookData.tool_input.command
+# Build dynamic pattern group
+$patternGroup = $blockedPatterns -join '|'
 
-# Validate command is string
-if ($command -isnot [string]) {
-    Write-Error "ERROR: Command must be string"
-    exit 2
-}
+# Pattern for directory paths (used for file_path, path, pattern)
+# Handles both forward slashes (/) and backslashes (\) for cross-platform support
+$blockedDirPattern = "(^|[/\\]|\s)($patternGroup)([/\\]|`$|\s)"
 
-# Validate command not empty
-if ([string]::IsNullOrWhiteSpace($command)) {
-    Write-Error "ERROR: Empty command"
-    exit 2
-}
+# Pattern for Bash commands - only block directory access, not build commands
+# Blocks: cd node_modules, ls build/, cat dist/file.js
+# Allows: npm build, pnpm build, yarn build, npm run build
+$blockedBashPattern = "(cd\s+|ls\s+|cat\s+|rm\s+|cp\s+|mv\s+|find\s+)($patternGroup)([/\\]|`$|\s)|(\s|^|[/\\])($patternGroup)[/\\]"
 
-# Define blocked patterns (regex)
-$blockedPatterns = @(
-    'node_modules',
-    '__pycache__',
-    '\.git/',
-    'dist/',
-    'build/'
+# Check file path parameters (strict blocking)
+$fileParams = @(
+    $toolInput.file_path,    # Read, Edit, Write tools
+    $toolInput.path,         # Grep, Glob tools
+    $toolInput.pattern       # Glob, Grep tools
 )
 
-# Check if command matches any blocked pattern
-foreach ($pattern in $blockedPatterns) {
-    if ($command -match $pattern) {
-        Write-Error "ERROR: Blocked directory pattern"
+foreach ($param in $fileParams) {
+    if ($param -and ($param -is [string]) -and ($param -match $blockedDirPattern)) {
+        $patternList = ($blockedPatterns -replace '\\', '') -join ', '
+        Write-Error "ERROR: Blocked directory pattern ($patternList)"
+        exit 2
+    }
+}
+
+# Check Bash command (selective blocking - only directory access)
+if ($toolInput.command -and ($toolInput.command -is [string])) {
+    if ($toolInput.command -match $blockedBashPattern) {
+        $patternList = ($blockedPatterns -replace '\\', '') -join ', '
+        Write-Error "ERROR: Blocked directory pattern ($patternList)"
         exit 2
     }
 }

@@ -25,14 +25,10 @@
  * - 2: Command blocked or error occurred
  */
 
-import { execSync } from 'child_process';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const { execSync } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+// __dirname and __filename are already available in CommonJS
 
 try {
   // Read stdin synchronously
