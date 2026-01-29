@@ -35,16 +35,16 @@ your-project/
 
 ```bash
 # Copy tất cả skills vào dự án
-cp -r path/to/tooltip_claude/.claude/skills/* your-project/.claude/skills/
+cp -r path/to/tooltip_claude/skills/* your-project/.claude/skills/
 ```
 
 ### Cách 2: Copy Skills Cụ Thể
 
 ```bash
 # Chỉ copy skills cần thiết
-cp -r path/to/tooltip_claude/.claude/skills/debugging your-project/.claude/skills/
-cp -r path/to/tooltip_claude/.claude/skills/code-review your-project/.claude/skills/
-cp -r path/to/tooltip_claude/.claude/skills/frontend-development your-project/.claude/skills/
+cp -r path/to/tooltip_claude/skills/debugging your-project/.claude/skills/
+cp -r path/to/tooltip_claude/skills/frontend-development your-project/.claude/skills/
+cp -r path/to/tooltip_claude/skills/web-frameworks your-project/.claude/skills/
 ```
 
 ### Skills Được Khuyên Dùng
@@ -78,7 +78,7 @@ cat your-project/.claude/skills/debugging/SKILL.md
 mkdir -p your-project/.claude/agents
 
 # Copy tất cả agents
-cp path/to/tooltip_claude/.claude/agents/*.md your-project/.claude/agents/
+cp path/to/tooltip_claude/agents/*.md your-project/.claude/agents/
 ```
 
 ### Agents Có Sẵn
@@ -105,7 +105,7 @@ cp path/to/tooltip_claude/.claude/agents/*.md your-project/.claude/agents/
 mkdir -p your-project/.claude/hooks
 
 # Copy hook scripts
-cp path/to/tooltip_claude/.claude/hooks/scout-block.* your-project/.claude/hooks/
+cp path/to/tooltip_claude/hooks/scout-block.* your-project/.claude/hooks/
 ```
 
 ### Scout-Block Hook

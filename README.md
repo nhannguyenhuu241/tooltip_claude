@@ -58,14 +58,14 @@ git clone <repo-url> tooltip_claude
 
 ```bash
 # Copy skills cần thiết
-cp -r tooltip_claude/.claude/skills/debugging your-project/.claude/skills/
-cp -r tooltip_claude/.claude/skills/frontend-development your-project/.claude/skills/
+cp -r tooltip_claude/skills/debugging your-project/.claude/skills/
+cp -r tooltip_claude/skills/frontend-development your-project/.claude/skills/
 
 # Copy agents
-cp tooltip_claude/.claude/agents/*.md your-project/.claude/agents/
+cp tooltip_claude/agents/*.md your-project/.claude/agents/
 
 # Copy hooks và statusline
-cp tooltip_claude/.claude/hooks/* your-project/.claude/hooks/
+cp tooltip_claude/hooks/* your-project/.claude/hooks/
 cp tooltip_claude/.claude/statusline.* your-project/.claude/
 ```
 

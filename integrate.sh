@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 
 # Get script directory (source)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE_DIR="$SCRIPT_DIR/.claude"
+SOURCE_DIR="$SCRIPT_DIR"
 
 # Target directory from argument
 TARGET_PROJECT="${1:-}"
@@ -95,7 +95,7 @@ done
 # Copy statusline
 echo ""
 echo -e "${BLUE}Copying statusline...${NC}"
-for statusline in "$SOURCE_DIR/statusline."*; do
+for statusline in "$SOURCE_DIR/.claude/statusline."*; do
     if [ -f "$statusline" ]; then
         cp "$statusline" "$TARGET_DIR/"
         chmod +x "$TARGET_DIR/$(basename "$statusline")" 2>/dev/null || true
@@ -108,10 +108,10 @@ echo ""
 echo -e "${BLUE}Handling settings.json...${NC}"
 if [ -f "$TARGET_DIR/settings.json" ]; then
     echo -e "  ${YELLOW}!${NC} settings.json already exists - creating settings.json.new"
-    cp "$SOURCE_DIR/settings.json" "$TARGET_DIR/settings.json.new"
+    cp "$SOURCE_DIR/.claude/settings.json" "$TARGET_DIR/settings.json.new"
     echo -e "  ${YELLOW}→${NC} Please merge manually from settings.json.new"
 else
-    cp "$SOURCE_DIR/settings.json" "$TARGET_DIR/"
+    cp "$SOURCE_DIR/.claude/settings.json" "$TARGET_DIR/"
     echo -e "  ${GREEN}✓${NC} settings.json"
 fi
 
