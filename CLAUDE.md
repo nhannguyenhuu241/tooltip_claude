@@ -12,31 +12,53 @@ This is the **Anthropic Skills Repository** - a collection of example skills and
 
 ```
 tooltip_claude/
-├── .claude/
-│   ├── settings.json      # Claude Code configuration
-│   ├── statusline.js      # Custom statusline script
-│   └── ...
-├── agents/                # Agent definitions (8 agents)
+├── .claude/               # Core configuration
+│   ├── settings.json
+│   └── statusline.js
+│
+├── agents/                # 8 pre-configured agents (.md files)
 │   ├── code-reviewer.md
 │   ├── debugger.md
-│   └── ...
-├── hooks/                 # Pre/Post tool use hooks
-│   └── scout-block.js     # Chặn thư mục nặng
-├── skills/                # Skill definitions (7 + document-skills)
-│   ├── document-skills/   # PDF, DOCX, PPTX, XLSX (built-in)
+│   └── ... (database-admin, planner, researcher, etc.)
+│
+├── hooks/                 # 4 modular hooks (each in separate folder)
+│   ├── scout-block/       # ⭐ Block heavy directories
+│   │   ├── README.md
+│   │   ├── scout-block.js
+│   │   ├── scout-block.cjs
+│   │   ├── scout-block.sh
+│   │   └── scout-block.ps1
+│   ├── dev-rules-reminder/
+│   ├── discord-notify/
+│   └── telegram-notify/
+│
+├── commands/              # 23 slash commands (modular folders)
+│   ├── cook/              # /cook command
+│   ├── fix/               # /fix + variants (fix:fast, fix:hard, etc.)
+│   ├── plan/              # /plan + variants
+│   └── ... (design, git, test, bootstrap, etc.)
+│
+├── skills/                # 7 skills + document-skills
 │   ├── backend-development/
 │   ├── frontend-development/
 │   ├── mobile-development/
 │   ├── databases/
 │   ├── web-frameworks/
 │   ├── debugging/
-│   └── research/
-├── assets/                # Screenshots, images
-├── integrate.sh           # Script tích hợp tự động
-├── README.md
-├── INTEGRATION_GUIDE.md
-└── NETWORK_GUIDE.md
+│   ├── research/
+│   └── document-skills/   # PDF, DOCX, PPTX, XLSX (built-in)
+│
+├── assets/                # Screenshots for documentation
+├── integrate.sh           # Auto-integration script
+├── README.md              # Main documentation
+├── INTEGRATION_GUIDE.md   # Integration guide
+└── NETWORK_GUIDE.md       # Network/proxy setup
 ```
+
+**Key Points:**
+- **Modular design**: Each hook and command in its own folder with README
+- **Easy distribution**: Download individual components
+- **Self-documented**: Each folder contains usage instructions
 
 ### Skill Structure
 

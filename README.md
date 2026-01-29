@@ -79,28 +79,49 @@ Xem chi tiết tại [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)
 
 ```
 tooltip_claude/
-├── .claude/                # Cấu hình Claude Code
+├── .claude/                # ⚙️ Cấu hình
 │   ├── settings.json
 │   └── statusline.js
-├── agents/                 # 8 agent definitions
+│
+├── agents/                 # 🤖 8 Agents (code-reviewer, debugger...)
 │   ├── code-reviewer.md
 │   ├── debugger.md
-│   └── ...
-├── hooks/                  # Hooks bảo vệ
-│   └── scout-block.js
-├── skills/                 # 7 skills + document-skills
-│   ├── document-skills/
+│   └── ... (8 agents)
+│
+├── hooks/                  # 🔗 4 Hooks modular
+│   ├── scout-block/        # Chặn thư mục nặng ⭐
+│   ├── dev-rules-reminder/ # Nhắc coding rules
+│   ├── discord-notify/     # Discord notifications
+│   └── telegram-notify/    # Telegram notifications
+│
+├── commands/               # ⚡ 23 Slash Commands
+│   ├── cook/              # /cook - Quick implement
+│   ├── fix/               # /fix - Bug fixes
+│   ├── plan/              # /plan - Planning
+│   ├── design/            # /design - UI/UX
+│   └── ... (23 commands)
+│
+├── skills/                 # 📚 7 Skills + document-skills
 │   ├── backend-development/
 │   ├── frontend-development/
 │   ├── mobile-development/
 │   ├── databases/
 │   ├── web-frameworks/
 │   ├── debugging/
-│   └── research/
-├── assets/                 # Screenshots
-├── integrate.sh            # Script tích hợp
-└── *.md                    # Documentation
+│   ├── research/
+│   └── document-skills/    # PDF, DOCX, PPTX, XLSX
+│
+├── assets/                 # 📸 Screenshots
+├── integrate.sh            # 🚀 Script tích hợp tự động
+├── README.md               # Tổng quan
+├── INTEGRATION_GUIDE.md    # Hướng dẫn tích hợp
+└── NETWORK_GUIDE.md        # Cấu hình mạng/proxy
 ```
+
+**Modular Design:**
+- Mỗi hook/command trong folder riêng
+- Có README.md riêng
+- Download/cài đặt độc lập
 
 ---
 
