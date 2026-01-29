@@ -78,25 +78,28 @@ Xem chi tiết tại [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)
 ## Cấu Trúc Repository
 
 ```
-.claude/
-├── settings.json       # Cấu hình Claude Code
-├── statusline.js       # Script statusline tùy chỉnh
-├── agents/             # 8 agent definitions
+tooltip_claude/
+├── .claude/                # Cấu hình Claude Code
+│   ├── settings.json
+│   └── statusline.js
+├── agents/                 # 8 agent definitions
 │   ├── code-reviewer.md
 │   ├── debugger.md
-│   ├── database-admin.md
 │   └── ...
-├── hooks/              # Hooks bảo vệ
-│   └── scout-block.js  # Chặn thư mục nặng
-└── skills/             # 7 skills + document-skills
-    ├── document-skills/    # PDF, DOCX, PPTX, XLSX (built-in)
-    ├── backend-development/
-    ├── frontend-development/
-    ├── mobile-development/
-    ├── databases/
-    ├── web-frameworks/
-    ├── debugging/
-    └── research/
+├── hooks/                  # Hooks bảo vệ
+│   └── scout-block.js
+├── skills/                 # 7 skills + document-skills
+│   ├── document-skills/
+│   ├── backend-development/
+│   ├── frontend-development/
+│   ├── mobile-development/
+│   ├── databases/
+│   ├── web-frameworks/
+│   ├── debugging/
+│   └── research/
+├── assets/                 # Screenshots
+├── integrate.sh            # Script tích hợp
+└── *.md                    # Documentation
 ```
 
 ---

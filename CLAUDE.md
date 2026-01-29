@@ -11,20 +11,31 @@ This is the **Anthropic Skills Repository** - a collection of example skills and
 ### Directory Structure
 
 ```
-.claude/
-├── settings.json      # Claude Code configuration (statusline, hooks)
-├── statusline.js      # Custom statusline with git/model/usage info
-├── agents/            # Agent definition files (.md)
-├── hooks/             # Pre/Post tool use hooks
-└── skills/            # Skill definitions
-    ├── document-skills/   # PDF, DOCX, PPTX, XLSX (built-in)
-    ├── backend-development/
-    ├── frontend-development/
-    ├── mobile-development/
-    ├── databases/
-    ├── web-frameworks/
-    ├── debugging/
-    └── research/
+tooltip_claude/
+├── .claude/
+│   ├── settings.json      # Claude Code configuration
+│   ├── statusline.js      # Custom statusline script
+│   └── ...
+├── agents/                # Agent definitions (8 agents)
+│   ├── code-reviewer.md
+│   ├── debugger.md
+│   └── ...
+├── hooks/                 # Pre/Post tool use hooks
+│   └── scout-block.js     # Chặn thư mục nặng
+├── skills/                # Skill definitions (7 + document-skills)
+│   ├── document-skills/   # PDF, DOCX, PPTX, XLSX (built-in)
+│   ├── backend-development/
+│   ├── frontend-development/
+│   ├── mobile-development/
+│   ├── databases/
+│   ├── web-frameworks/
+│   ├── debugging/
+│   └── research/
+├── assets/                # Screenshots, images
+├── integrate.sh           # Script tích hợp tự động
+├── README.md
+├── INTEGRATION_GUIDE.md
+└── NETWORK_GUIDE.md
 ```
 
 ### Skill Structure
