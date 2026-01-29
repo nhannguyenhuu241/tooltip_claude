@@ -1,0 +1,33 @@
+{
+  "environment": "staging",
+  "staging": {
+    "appName": "Construct",
+    "appId": "com.app",
+    "versionName": "1.0.0",
+    "versionCode": 1,
+    "server": "",
+    "langDefault": "vi",
+    "enableLang": true,
+    "releaseDate": "30/06/2025",
+    "storeFile": "",
+    "storePassword": "",
+    "keyAlias": "",
+    "keyPassword": "",
+    "displayPrint": true
+  },
+  "production": {
+    "appName": "Construct",
+    "appId": "com.app",
+    "versionName": "1.0.0",
+    "versionCode": 1,
+    "server": "",
+    "langDefault": "vi",
+    "enableLang": true,
+    "releaseDate": "30/06/2025",
+    "storeFile": "",
+    "storePassword": "",
+    "keyAlias": "",
+    "keyPassword": "",
+    "displayPrint": true
+  }
+}
