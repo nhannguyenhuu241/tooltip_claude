@@ -1,4 +1,86 @@
 # Changes Log
 
+## 2026-01-30
+
+- **c3c6b55** by Nguyen Huu Nhan (0 seconds ago)
+  📌 Branch: `main`
+  feat: prepare auto-doc-sync MCP server for deployment
+  📦 Modules: `other`
+  Files: codebase/flutter/CHANGES.md, codebase/flutter/docs/CONTEXT.md, codebase/flutter/docs/modules/other.md, codebase/flutter/docs/modules/splash.md, codebase/flutter/docs/modules/widgets.md, mcp-servers/auto-doc-sync/FEATURES_SUMMARY.md, mcp-servers/auto-doc-sync/README.md
+
+- **327a296** by Nguyen Huu Nhan (32 minutes ago)
+  📌 Branch: `main`
+  update mcp
+  📦 Modules: `other`
+  ⚠️  **Dependencies updated** - Run: `npm install`
+  Files: .claude/settings.local.json, codebase/flutter/.claude/hooks/auto-doc-sync/GIT_HOOKS_GUIDE.md, codebase/flutter/.claude/hooks/auto-doc-sync/auto-doc-sync.js, codebase/flutter/.claude/hooks/auto-doc-sync/deduplicate-changes.js, codebase/flutter/.claude/hooks/auto-doc-sync/deduplicate-module-docs.js, codebase/flutter/CHANGES.md, codebase/flutter/docs/CONTEXT.md, codebase/flutter/docs/modules/other.md, codebase/flutter/docs/modules/splash.md, codebase/flutter/docs/modules/widgets.md, mcp-servers/auto-doc-sync/.gitignore, mcp-servers/auto-doc-sync/PROMPTS.md, mcp-servers/auto-doc-sync/QUICKSTART.md, mcp-servers/auto-doc-sync/README.md, mcp-servers/auto-doc-sync/index.js, mcp-servers/auto-doc-sync/install.sh, mcp-servers/auto-doc-sync/package.json, mcp-servers/auto-doc-sync/templates/deduplicate-changes.js, mcp-servers/auto-doc-sync/templates/deduplicate-module-docs.js, mcp-servers/auto-doc-sync/templates/flutter-hook.js, mcp-servers/auto-doc-sync/templates/generic-hook.js
+
+- **2a42b28** by Nguyen Huu Nhan (4 hours ago)
+  📌 Branch: `main`
+  feat(docs): improve CONTEXT.md with comprehensive AI context
+  📦 Modules: `other`
+  Files: codebase/flutter/.claude/hooks/auto-doc-sync/auto-doc-sync.js, codebase/flutter/docs/CONTEXT.md
+
+- **cd275f8** by Nguyen Huu Nhan (4 hours ago)
+  📌 Branch: `main`
+  cleanup: remove library detection test files
+  📦 Modules: `other`
+  Files: codebase/flutter/TEST_LIBRARY_UPDATE.md
+
+- **e1ca242** by Nguyen Huu Nhan (4 hours ago)
+  📌 Branch: `main`
+  test: verify library update detection in CHANGES.md
+  📦 Modules: `other`
+  ⚠️  **Dependencies updated** - Run: `flutter pub get`
+  Files: codebase/flutter/TEST_LIBRARY_UPDATE.md, codebase/flutter/pubspec.yaml
+
+- **f5c6864** by Nguyen Huu Nhan (4 hours ago)
+  📌 Branch: `main`
+  update
+  📦 Modules: `other`
+  Files: codebase/flutter/.claude/hooks/auto-doc-sync/auto-doc-sync.js, codebase/flutter/CHANGES.md, codebase/flutter/docs/CONTEXT.md, codebase/flutter/docs/modules/other.md, codebase/flutter/docs/modules/splash.md, codebase/flutter/docs/modules/widgets.md
+
+- **8bd03e3** by Nguyen Huu Nhan (5 hours ago)
+  📌 Branch: `main`
+  update
+  📦 Modules: `other`
+  Files: codebase/flutter/CHANGES.md, codebase/flutter/docs/CONTEXT.md, codebase/flutter/docs/modules/other.md, codebase/flutter/docs/modules/splash.md, codebase/flutter/docs/modules/widgets.md
+
+- **b9add1d** by Nguyen Huu Nhan (5 hours ago)
+  📌 Branch: `main`
+  update
+  📦 Modules: `other`
+  Files: .claude/settings.local.json, codebase/flutter/.claude/hooks/auto-doc-sync/README_TEST.md, codebase/flutter/.claude/hooks/auto-doc-sync/TEST_MULTI_MODULE.md, codebase/flutter/.claude/hooks/auto-doc-sync/auto-doc-sync.js, codebase/flutter/.claude/hooks/auto-doc-sync/install-git-hook.sh, codebase/flutter/CHANGES.md, codebase/flutter/docs/CONTEXT.md, codebase/flutter/docs/modules/other.md, codebase/flutter/docs/modules/splash.md, codebase/flutter/docs/modules/widgets.md
+
+- **f13a1ee** by Nguyen Huu Nhan (5 hours ago)
+  📌 Branch: `main`
+  test: verify branch and module info in CHANGES.md
+  📦 Modules: `other`
+  Files: TEST_FORMAT.md
+
+- **966cda5** by Nguyen Huu Nhan (5 hours ago)
+  📌 Branch: `main`
+  cleanup: remove git hook test file
+  📦 Modules: `other`
+  Files: codebase/flutter/TEST_GIT_HOOK.md
+
+- **ff98c0b** by Nguyen Huu Nhan (5 hours ago)
+  📌 Branch: `main`
+  test: verify git hook after fix
+  📦 Modules: `other`
+  Files: codebase/flutter/TEST_GIT_HOOK.md
+
+- **a31d70a** by Nguyen Huu Nhan (5 hours ago)
+  📌 Branch: `main`
+  test: verify git hook works with all tools
+  📦 Modules: `other`
+  Files: codebase/flutter/TEST_GIT_HOOK.md
+
+- **1c87d48** by Nguyen Huu Nhan (5 hours ago)
+  📌 Branch: `main`
+  updae
+  📦 Modules: `other`
+  Files: .claude/settings.local.json, ENTERPRISE_SOLUTION.md, FLUTTER_EXAMPLE.md, IMPLEMENTATION_PLAN.md, codebase/flutter/.claude/README.md, codebase/flutter/.claude/commands/create-screen/create-screen.md, codebase/flutter/.claude/commands/create-widget/create-widget.md, codebase/flutter/.claude/commands/sync/sync.md, codebase/flutter/.claude/hooks/auto-doc-sync/GIT_HOOKS_GUIDE.md, codebase/flutter/.claude/hooks/auto-doc-sync/README_TEST.md, codebase/flutter/.claude/hooks/auto-doc-sync/TEST_MULTI_MODULE.md, codebase/flutter/.claude/hooks/auto-doc-sync/auto-doc-sync.js, codebase/flutter/.claude/hooks/auto-doc-sync/install-git-hook.sh, codebase/flutter/.claude/hooks/auto-doc-sync/test-multi-module.sh, codebase/flutter/.claude/prompts/system-instructions.md, codebase/flutter/.claude/prompts/templates/create-flutter-screen.md, codebase/flutter/.claude/prompts/templates/create-flutter-widget.md, codebase/flutter/.claude/prompts/templates/write-flutter-test.md, codebase/flutter/.claude/settings.json, codebase/flutter/CHANGES.md, codebase/flutter/CLAUDE.md, codebase/flutter/README.md, codebase/flutter/docs/CONTEXT.md, codebase/flutter/docs/context/libs/provider-pattern.md, codebase/flutter/docs/context/libs/theme-system.md, commands/sync/sync.md, hooks/auto-doc-sync/README.md, hooks/auto-doc-sync/auto-doc-sync.js
+
 Track all changes to the Construction Project codebase.
 
