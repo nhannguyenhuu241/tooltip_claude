@@ -1,46 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Auto Documentation Sync Hook - Flutter Edition
+ * Auto Documentation Sync Hook - Generic Edition
  *
- * Tự động cập nhật documentation khi có git changes:
- * - Phát hiện git operations (commit, pull, merge)
- * - Phân tích changes theo Flutter modules
- * - Cập nhật CHANGES.md
- * - Cập nhật module docs
- * - Notify team
+ * Works with any Git project. Detects modules based on directory structure.
  */
 
 const fs = require('fs');
 const { execSync } = require('child_process');
 const path = require('path');
-
-// Check if running from Git hook (no stdin) or PostToolUse (has stdin)
-let isGitHookMode = false;
-let data = null;
-
-// Try to read stdin (PostToolUse mode)
-try {
-  const stat = fs.fstatSync(0);
-  if (stat.size > 0) {
-    const hookInput = fs.readFileSync(0, 'utf-8');
-    data = JSON.parse(hookInput);
-
-    // Check if this is a git operation
-    const isGitOperation = data.tool_name === 'Bash' &&
-      data.tool_input?.command?.match(/git\s+(commit|push|pull|merge)/);
-
-    if (!isGitOperation) {
-      process.exit(0); // Allow non-git operations
-    }
-  } else {
-    // No stdin input = Git hook mode
-    isGitHookMode = true;
-  }
-} catch (error) {
-  // No stdin = Git hook mode
-  isGitHookMode = true;
-}
 
 // Get project directory
 const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -79,7 +47,6 @@ function getCurrentBranch() {
  * Get branch name for a specific commit
  */
 function getBranchForCommit(hash) {
-  // Try to get branch from commit
   const branches = exec(`git branch --contains ${hash} 2>/dev/null`);
   if (branches) {
     const lines = branches.split('\n');
@@ -108,7 +75,6 @@ function getRecentChanges() {
 
   lines.forEach(line => {
     if (line.includes('|')) {
-      // Commit line: hash|author|time|message
       const [hash, author, time, message] = line.split('|');
       currentCommit = {
         hash,
@@ -121,19 +87,16 @@ function getRecentChanges() {
       };
       commits.push(currentCommit);
     } else if (line.trim() && currentCommit) {
-      // File change line: M\tpath/to/file
       const match = line.match(/^([AMD])\s+(.+)$/);
       if (match) {
         const [, status, file] = match;
         currentCommit.files.push({ status, file });
-        // Detect module for this file
-        const module = detectFlutterModule(file);
+        const module = detectModule(file);
         currentCommit.modules.add(module);
       }
     }
   });
 
-  // Convert Set to Array
   commits.forEach(commit => {
     commit.modules = Array.from(commit.modules);
   });
@@ -142,42 +105,55 @@ function getRecentChanges() {
 }
 
 /**
- * Detect Flutter module from file path
+ * Detect module from file path (generic logic)
  */
-function detectFlutterModule(filePath) {
-  // lib/core/* → core module
-  if (filePath.startsWith('lib/core/')) {
+function detectModule(filePath) {
+  // src/module-name/* → module-name
+  if (filePath.startsWith('src/')) {
     const parts = filePath.split('/');
-    if (parts.length >= 3) {
-      return `core-${parts[2]}`; // core/theme → core-theme
+    if (parts.length >= 2) {
+      return parts[1];
     }
-    return 'core';
   }
 
-  // lib/features/presentation/splash_module → splash
-  if (filePath.includes('/features/presentation/')) {
-    const match = filePath.match(/presentation\/([^/]+)_module/);
-    if (match) return match[1];
+  // lib/module-name/* → module-name
+  if (filePath.startsWith('lib/')) {
+    const parts = filePath.split('/');
+    if (parts.length >= 2) {
+      return parts[1];
+    }
   }
 
-  // lib/features/widgets/* → widgets
-  if (filePath.includes('/features/widgets/')) {
-    return 'widgets';
+  // packages/module-name/* → module-name
+  if (filePath.startsWith('packages/')) {
+    const parts = filePath.split('/');
+    if (parts.length >= 2) {
+      return parts[1];
+    }
   }
 
-  // lib/l10n/* → localization
-  if (filePath.startsWith('lib/l10n/')) {
-    return 'localization';
-  }
-
-  // pubspec.yaml → dependencies
-  if (filePath === 'pubspec.yaml') {
+  // Dependency files
+  if (filePath === 'package.json' ||
+      filePath === 'pubspec.yaml' ||
+      filePath === 'requirements.txt' ||
+      filePath === 'Gemfile' ||
+      filePath === 'go.mod') {
     return 'dependencies';
   }
 
-  // test/* → tests
-  if (filePath.startsWith('test/')) {
+  // Test files
+  if (filePath.startsWith('test/') || filePath.startsWith('tests/') || filePath.includes('__tests__')) {
     return 'tests';
+  }
+
+  // Docs
+  if (filePath.startsWith('docs/')) {
+    return 'docs';
+  }
+
+  // Config files
+  if (filePath.includes('.config.') || filePath.endsWith('.config.js') || filePath.endsWith('.config.ts')) {
+    return 'config';
   }
 
   return 'other';
@@ -191,7 +167,7 @@ function analyzeChanges(commits) {
 
   commits.forEach(commit => {
     commit.files.forEach(({ status, file }) => {
-      const moduleName = detectFlutterModule(file);
+      const moduleName = detectModule(file);
 
       if (!moduleChanges[moduleName]) {
         moduleChanges[moduleName] = {
@@ -210,7 +186,6 @@ function analyzeChanges(commits) {
     });
   });
 
-  // Convert Set to Array
   Object.keys(moduleChanges).forEach(module => {
     moduleChanges[module].files = Array.from(moduleChanges[module].files);
   });
@@ -219,17 +194,16 @@ function analyzeChanges(commits) {
 }
 
 /**
- * Update CHANGES.md
+ * Update CHANGES.md with deduplication
  */
 function updateChangesFile(commits) {
   const now = new Date().toISOString().split('T')[0];
 
-  // Read existing CHANGES.md
   let content = '';
   if (fs.existsSync(config.changesFile)) {
     content = fs.readFileSync(config.changesFile, 'utf8');
   } else {
-    content = '# Changes Log\n\nTrack all changes to the Construction Project codebase.\n\n';
+    content = '# Changes Log\n\nTrack all changes to the project codebase.\n\n';
   }
 
   // Extract existing commit hashes to avoid duplicates
@@ -243,16 +217,12 @@ function updateChangesFile(commits) {
   // Filter out commits that already exist
   const newCommits = commits.filter(commit => !existingHashes.has(commit.hash));
 
-  // If no new commits, skip update
   if (newCommits.length === 0) {
     console.log('✓ No new commits to add to CHANGES.md');
     return;
   }
 
-  // Generate new entries
   let newEntries = '';
-
-  // Check if today's section already exists
   const todayHeader = `## ${now}`;
   const hasTodaySection = content.includes(todayHeader);
 
@@ -261,18 +231,14 @@ function updateChangesFile(commits) {
   }
 
   newCommits.forEach(commit => {
-    // Header line with hash, author, time
     newEntries += `- **${commit.hash}** by ${commit.author} (${commit.time})\n`;
 
-    // Branch info
     if (commit.branch) {
       newEntries += `  📌 Branch: \`${commit.branch}\`\n`;
     }
 
-    // Commit message
     newEntries += `  ${commit.message}\n`;
 
-    // Modules affected
     if (commit.modules && commit.modules.length > 0) {
       newEntries += `  📦 Modules: ${commit.modules.map(m => `\`${m}\``).join(', ')}\n`;
     }
@@ -287,7 +253,6 @@ function updateChangesFile(commits) {
     );
 
     if (dependencyFiles.length > 0) {
-      // Detect which package manager
       let installCommand = '';
       if (dependencyFiles.some(f => f.file.endsWith('pubspec.yaml'))) {
         installCommand = 'flutter pub get';
@@ -304,41 +269,34 @@ function updateChangesFile(commits) {
       newEntries += `  ⚠️  **Dependencies updated** - Run: \`${installCommand}\`\n`;
     }
 
-    // Files changed
     if (commit.files.length > 0) {
       newEntries += `  Files: ${commit.files.map(f => f.file).join(', ')}\n`;
     }
     newEntries += '\n';
   });
 
-  // Insert new entries
   let updatedContent;
   if (hasTodaySection) {
-    // Insert after today's header
     const todayHeaderIndex = content.indexOf(todayHeader);
     const insertPosition = content.indexOf('\n\n', todayHeaderIndex) + 2;
     updatedContent = content.slice(0, insertPosition) +
                      newEntries +
                      content.slice(insertPosition);
   } else {
-    // Insert after main header
     const headerEnd = content.indexOf('\n\n') + 2;
     updatedContent = content.slice(0, headerEnd) +
                      newEntries +
                      content.slice(headerEnd);
   }
 
-  // Write back
   fs.writeFileSync(config.changesFile, updatedContent, 'utf8');
-
   console.log(`✓ Updated ${config.changesFile} with ${newCommits.length} new commit(s)`);
 }
 
 /**
- * Update module documentation
+ * Update module documentation with deduplication
  */
 function updateModuleDocs(moduleChanges) {
-  // Ensure docs/modules directory exists
   if (!fs.existsSync(config.moduleDocsDir)) {
     fs.mkdirSync(config.moduleDocsDir, { recursive: true });
   }
@@ -347,12 +305,11 @@ function updateModuleDocs(moduleChanges) {
     const moduleDocPath = path.join(config.moduleDocsDir, `${moduleName}.md`);
     const changes = moduleChanges[moduleName];
 
-    // Read or create module doc
     let content = '';
     if (fs.existsSync(moduleDocPath)) {
       content = fs.readFileSync(moduleDocPath, 'utf8');
     } else {
-      content = `# ${moduleName} Module\n\n## Overview\n\nFlutter module for ${moduleName}.\n\n## Recent Changes\n\n`;
+      content = `# ${moduleName} Module\n\n## Overview\n\nModule for ${moduleName}.\n\n## Recent Changes\n\n`;
     }
 
     // Extract existing commit hashes to avoid duplicates
@@ -366,13 +323,11 @@ function updateModuleDocs(moduleChanges) {
     // Filter out commits that already exist
     const newCommits = changes.commits.filter(commit => !existingHashes.has(commit.hash));
 
-    // If no new commits for this module, skip update
     if (newCommits.length === 0) {
       console.log(`✓ No new commits to add to ${moduleDocPath}`);
       return;
     }
 
-    // Find "Recent Changes" section
     const changesHeader = '## Recent Changes';
     let changesIndex = content.indexOf(changesHeader);
 
@@ -381,7 +336,6 @@ function updateModuleDocs(moduleChanges) {
       changesIndex = content.indexOf(changesHeader);
     }
 
-    // Generate new changes entry
     const now = new Date().toISOString().split('T')[0];
     let newChanges = `### ${now}\n\n`;
 
@@ -395,7 +349,6 @@ function updateModuleDocs(moduleChanges) {
     });
     newChanges += '\n';
 
-    // Insert new changes
     const insertPosition = changesIndex + changesHeader.length + 2;
     const updatedContent = content.slice(0, insertPosition) +
                           newChanges +
@@ -407,7 +360,7 @@ function updateModuleDocs(moduleChanges) {
 }
 
 /**
- * Update CONTEXT.md with team activity summary
+ * Update CONTEXT.md with comprehensive AI context
  */
 function updateContext(commits, moduleChanges) {
   const contextPath = config.contextFile;
@@ -419,8 +372,7 @@ function updateContext(commits, moduleChanges) {
 
   const now = new Date().toISOString();
 
-  // Build comprehensive context
-  let contextContent = `# Construction Project Context
+  let contextContent = `# Project Context
 
 **Auto-generated AI Context** - Last updated: ${now}
 
@@ -433,16 +385,10 @@ function updateContext(commits, moduleChanges) {
 
 `;
 
-  // Detect change types
+  // Categorize commits by type
   const changeTypes = {
-    features: [],
-    fixes: [],
-    refactors: [],
-    breaking: [],
-    dependencies: [],
-    docs: [],
-    tests: [],
-    other: []
+    features: [], fixes: [], refactors: [],
+    breaking: [], dependencies: [], docs: [], tests: [], other: []
   };
 
   commits.forEach(commit => {
@@ -473,18 +419,16 @@ function updateContext(commits, moduleChanges) {
     }
   });
 
-  // Breaking Changes (highest priority)
+  // Add categorized changes to context
   if (changeTypes.breaking.length > 0) {
     contextContent += `### ⚠️ BREAKING CHANGES (${changeTypes.breaking.length})\n\n`;
     contextContent += `**IMPORTANT**: These changes may break existing code!\n\n`;
     changeTypes.breaking.forEach(change => {
       contextContent += `- **${change.hash}**: ${change.message}\n`;
-      contextContent += `  - Modules: ${change.modules.join(', ')}\n`;
-      contextContent += `  - Branch: ${change.branch}\n\n`;
+      contextContent += `  - Modules: ${change.modules.join(', ')}\n\n`;
     });
   }
 
-  // New Features
   if (changeTypes.features.length > 0) {
     contextContent += `### ✨ New Features (${changeTypes.features.length})\n\n`;
     changeTypes.features.forEach(change => {
@@ -496,35 +440,12 @@ function updateContext(commits, moduleChanges) {
     contextContent += '\n';
   }
 
-  // Bug Fixes
   if (changeTypes.fixes.length > 0) {
     contextContent += `### 🐛 Bug Fixes (${changeTypes.fixes.length})\n\n`;
     changeTypes.fixes.forEach(change => {
       contextContent += `- **${change.hash}**: ${change.message}\n`;
       if (change.modules.length > 0) {
         contextContent += `  - Fixed in: ${change.modules.join(', ')}\n`;
-      }
-    });
-    contextContent += '\n';
-  }
-
-  // Dependency Updates
-  if (changeTypes.dependencies.length > 0) {
-    contextContent += `### 📦 Dependencies Updated (${changeTypes.dependencies.length})\n\n`;
-    contextContent += `**Action Required**: Run dependency installation after pulling these changes.\n\n`;
-    changeTypes.dependencies.forEach(change => {
-      contextContent += `- **${change.hash}**: ${change.message}\n`;
-    });
-    contextContent += '\n';
-  }
-
-  // Refactoring
-  if (changeTypes.refactors.length > 0) {
-    contextContent += `### 🔨 Code Refactoring (${changeTypes.refactors.length})\n\n`;
-    changeTypes.refactors.forEach(change => {
-      contextContent += `- **${change.hash}**: ${change.message}\n`;
-      if (change.modules.length > 0) {
-        contextContent += `  - Modules: ${change.modules.join(', ')}\n`;
       }
     });
     contextContent += '\n';
@@ -542,11 +463,8 @@ function updateContext(commits, moduleChanges) {
     contextContent += `### ${moduleName}\n\n`;
     contextContent += `- **${module.commits.length} commit(s)** in last 24h\n`;
     contextContent += `- **${module.files.length} file(s)** changed\n`;
-
-    // Add clickable warning to check updated module docs
     contextContent += `- ⚠️  **Updated**: Check [${moduleName}.md](../modules/${moduleName}.md) for latest changes\n\n`;
 
-    // Show recent changes for this module
     contextContent += `**Recent changes:**\n`;
     module.commits.slice(0, 3).forEach(commit => {
       contextContent += `- ${commit.message} (${commit.hash})\n`;
@@ -564,47 +482,26 @@ function updateContext(commits, moduleChanges) {
     contextContent += '\n';
   });
 
-  // AI Context Section
+  // AI Recommendations
   contextContent += `---
 
 ## 🤖 AI Context & Recommendations
 
 ### What AI Should Know:
 
+1. **Activity Level**: ${commits.length} commit(s) in last 24h
+2. **Most Active Modules**:
 `;
 
-  // Detect patterns
-  const totalChanges = commits.length;
   const hotspots = Object.entries(moduleChanges)
     .sort((a, b) => b[1].commits.length - a[1].commits.length)
     .slice(0, 3);
 
-  contextContent += `1. **Activity Level**: ${totalChanges} commit(s) in last 24h\n`;
-
-  if (hotspots.length > 0) {
-    contextContent += `2. **Most Active Modules**:\n`;
-    hotspots.forEach(([module, data]) => {
-      contextContent += `   - \`${module}\`: ${data.commits.length} commits - **High activity, coordinate before changes**\n`;
-    });
-  }
-
-  if (changeTypes.breaking.length > 0) {
-    contextContent += `3. **Breaking Changes Present**: Review migration guides before implementing features\n`;
-  }
-
-  if (changeTypes.dependencies.length > 0) {
-    contextContent += `4. **Dependencies Changed**: Ensure all packages are up-to-date before coding\n`;
-  }
+  hotspots.forEach(([module, data]) => {
+    contextContent += `   - \`${module}\`: ${data.commits.length} commits - **High activity, coordinate before changes**\n`;
+  });
 
   contextContent += `
-### Current Codebase State:
-
-- **Architecture**: Flutter with Provider pattern
-- **State Management**: Provider-based
-- **Theme System**: Custom theme with AppColors, AppTextStyles
-- **Localization**: Multi-language support (en, vi, zh)
-- **Modules**: Modular architecture with core + feature modules
-
 ### Before You Code:
 
 1. Check recent changes in modules you'll modify
@@ -612,15 +509,6 @@ function updateContext(commits, moduleChanges) {
 3. Update dependencies if needed
 4. Read module-specific docs in \`docs/modules/\`
 5. Coordinate with team on highly active modules
-
----
-
-## 📚 Quick Links
-
-- [CHANGES.md](../../CHANGES.md) - Full changelog
-- [Module Docs](../modules/) - Per-module documentation
-- [Theme System](../context/libs/theme-system.md) - Theme guide
-- [Provider Pattern](../context/libs/provider-pattern.md) - State management
 
 ---
 
@@ -635,9 +523,8 @@ function updateContext(commits, moduleChanges) {
  * Main execution
  */
 function main() {
-  console.log('🔄 Auto-Doc-Sync (Flutter): Analyzing recent changes...');
+  console.log('🔄 Auto-Doc-Sync: Analyzing recent changes...');
 
-  // Get recent changes
   const commits = getRecentChanges();
 
   if (!commits || commits.length === 0) {
@@ -647,23 +534,15 @@ function main() {
 
   console.log(`Found ${commits.length} commit(s) in last 24 hours`);
 
-  // Analyze changes by module
   const moduleChanges = analyzeChanges(commits);
   console.log(`Affected modules: ${Object.keys(moduleChanges).join(', ')}`);
 
-  // Update documentation files
   try {
     updateChangesFile(commits);
     updateModuleDocs(moduleChanges);
     updateContext(commits, moduleChanges);
 
     console.log('✅ Documentation updated successfully!');
-    console.log('');
-    console.log('📝 Updated files:');
-    console.log(`   - ${config.changesFile}`);
-    console.log(`   - ${config.contextFile}`);
-    console.log(`   - docs/modules/*.md`);
-
   } catch (error) {
     console.error('❌ Error updating docs:', error.message);
   }

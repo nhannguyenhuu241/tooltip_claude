@@ -9,7 +9,9 @@
       "Bash(./.claude/hooks/auto-doc-sync/install-git-hook.sh)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(node:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }
