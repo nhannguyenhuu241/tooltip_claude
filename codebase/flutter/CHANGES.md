@@ -2,6 +2,56 @@
 
 ## 2026-01-30
 
+- **b9add1d** by Nguyen Huu Nhan (0 seconds ago)
+  📌 Branch: `main`
+  update
+  📦 Modules: `other`
+  Files: .claude/settings.local.json, codebase/flutter/.claude/hooks/auto-doc-sync/README_TEST.md, codebase/flutter/.claude/hooks/auto-doc-sync/TEST_MULTI_MODULE.md, codebase/flutter/.claude/hooks/auto-doc-sync/auto-doc-sync.js, codebase/flutter/.claude/hooks/auto-doc-sync/install-git-hook.sh, codebase/flutter/CHANGES.md, codebase/flutter/docs/CONTEXT.md, codebase/flutter/docs/modules/other.md, codebase/flutter/docs/modules/splash.md, codebase/flutter/docs/modules/widgets.md
+
+- **f13a1ee** by Nguyen Huu Nhan (38 seconds ago)
+  📌 Branch: `main`
+  test: verify branch and module info in CHANGES.md
+  📦 Modules: `other`
+  Files: TEST_FORMAT.md
+
+- **966cda5** by Nguyen Huu Nhan (2 minutes ago)
+  📌 Branch: `main`
+  cleanup: remove git hook test file
+  📦 Modules: `other`
+  Files: codebase/flutter/TEST_GIT_HOOK.md
+
+- **ff98c0b** by Nguyen Huu Nhan (3 minutes ago)
+  📌 Branch: `main`
+  test: verify git hook after fix
+  📦 Modules: `other`
+  Files: codebase/flutter/TEST_GIT_HOOK.md
+
+- **a31d70a** by Nguyen Huu Nhan (4 minutes ago)
+  📌 Branch: `main`
+  test: verify git hook works with all tools
+  📦 Modules: `other`
+  Files: codebase/flutter/TEST_GIT_HOOK.md
+
+- **1c87d48** by Nguyen Huu Nhan (6 minutes ago)
+  📌 Branch: `main`
+  updae
+  📦 Modules: `other`
+  Files: .claude/settings.local.json, ENTERPRISE_SOLUTION.md, FLUTTER_EXAMPLE.md, IMPLEMENTATION_PLAN.md, codebase/flutter/.claude/README.md, codebase/flutter/.claude/commands/create-screen/create-screen.md, codebase/flutter/.claude/commands/create-widget/create-widget.md, codebase/flutter/.claude/commands/sync/sync.md, codebase/flutter/.claude/hooks/auto-doc-sync/GIT_HOOKS_GUIDE.md, codebase/flutter/.claude/hooks/auto-doc-sync/README_TEST.md, codebase/flutter/.claude/hooks/auto-doc-sync/TEST_MULTI_MODULE.md, codebase/flutter/.claude/hooks/auto-doc-sync/auto-doc-sync.js, codebase/flutter/.claude/hooks/auto-doc-sync/install-git-hook.sh, codebase/flutter/.claude/hooks/auto-doc-sync/test-multi-module.sh, codebase/flutter/.claude/prompts/system-instructions.md, codebase/flutter/.claude/prompts/templates/create-flutter-screen.md, codebase/flutter/.claude/prompts/templates/create-flutter-widget.md, codebase/flutter/.claude/prompts/templates/write-flutter-test.md, codebase/flutter/.claude/settings.json, codebase/flutter/CHANGES.md, codebase/flutter/CLAUDE.md, codebase/flutter/README.md, codebase/flutter/docs/CONTEXT.md, codebase/flutter/docs/context/libs/provider-pattern.md, codebase/flutter/docs/context/libs/theme-system.md, commands/sync/sync.md, hooks/auto-doc-sync/README.md, hooks/auto-doc-sync/auto-doc-sync.js
+
+- **bda0ab7** by Nguyen Huu Nhan (20 hours ago)
+  📌 Branch: `main`
+  update code base
+  📦 Modules: `other`, `splash`, `widgets`
+  Files: codebase/flutter/.claude/settings.local.json, codebase/flutter/.gitignore, codebase/flutter/CLAUDE.md, codebase/flutter/README.md, codebase/flutter/analysis_options.yaml, codebase/flutter/android/.gitignore, codebase/flutter/android/app/build.gradle.kts, codebase/flutter/android/app/src/debug/AndroidManifest.xml, codebase/flutter/android/app/src/main/AndroidManifest.xml, codebase/flutter/android/app/src/main/kotlin/com/app/construction_project/MainActivity.kt, codebase/flutter/android/app/src/main/res/drawable-v21/launch_background.xml, codebase/flutter/android/app/src/main/res/drawable/launch_background.xml, codebase/flutter/android/app/src/main/res/mipmap-hdpi/ic_launcher.png, codebase/flutter/android/app/src/main/res/mipmap-mdpi/ic_launcher.png, codebase/flutter/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png, codebase/flutter/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png, codebase/flutter/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png, codebase/flutter/android/app/src/main/res/values-night/styles.xml, codebase/flutter/android/app/src/main/res/values/styles.xml, codebase/flutter/android/app/src/profile/AndroidManifest.xml, codebase/flutter/android/build.gradle.kts, codebase/flutter/android/construction_project_android.iml, codebase/flutter/android/gradle.properties, codebase/flutter/android/gradle/wrapper/gradle-wrapper.properties, codebase/flutter/android/settings.gradle.kts, codebase/flutter/assets/config/config.json, codebase/flutter/assets/l10n/app_en.arb, codebase/flutter/assets/l10n/app_vi.arb, codebase/flutter/assets/l10n/app_zh.arb, codebase/flutter/construction_project.iml, codebase/flutter/ios/.gitignore, codebase/flutter/ios/Flutter/AppFrameworkInfo.plist, codebase/flutter/ios/Flutter/Debug.xcconfig, codebase/flutter/ios/Flutter/Release.xcconfig, codebase/flutter/ios/Podfile, codebase/flutter/ios/Runner.xcodeproj/project.pbxproj, codebase/flutter/ios/Runner.xcodeproj/project.xcworkspace/contents.xcworkspacedata, codebase/flutter/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist, codebase/flutter/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings, codebase/flutter/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme, codebase/flutter/ios/Runner.xcworkspace/contents.xcworkspacedata, codebase/flutter/ios/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist, codebase/flutter/ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings, codebase/flutter/ios/Runner/AppDelegate.swift, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png, codebase/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png, codebase/flutter/ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json, codebase/flutter/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png, codebase/flutter/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png, codebase/flutter/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png, codebase/flutter/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md, codebase/flutter/ios/Runner/Base.lproj/LaunchScreen.storyboard, codebase/flutter/ios/Runner/Base.lproj/Main.storyboard, codebase/flutter/ios/Runner/Info.plist, codebase/flutter/ios/Runner/Runner-Bridging-Header.h, codebase/flutter/ios/RunnerTests/RunnerTests.swift, codebase/flutter/l10n.yaml, codebase/flutter/lib/core/CORE.md, codebase/flutter/lib/core/config.dart, codebase/flutter/lib/core/network/internet_checker.dart, codebase/flutter/lib/core/providers/locale_provider.dart, codebase/flutter/lib/core/providers/theme_provider.dart, codebase/flutter/lib/core/routing/custom_navigator.dart, codebase/flutter/lib/core/theme/app_colors.dart, codebase/flutter/lib/core/theme/app_spacing.dart, codebase/flutter/lib/core/theme/app_text_styles.dart, codebase/flutter/lib/core/theme/app_theme.dart, codebase/flutter/lib/core/utils/globals.dart, codebase/flutter/lib/core/utils/utility.dart, codebase/flutter/lib/core/utils/validators.dart, codebase/flutter/lib/features/FEATURES.md, codebase/flutter/lib/features/presentation/splash_module/src/bloc/splash_bloc.dart, codebase/flutter/lib/features/presentation/splash_module/src/ui/splash_screen.dart, codebase/flutter/lib/features/widgets/buttons/icon_button_custom.dart, codebase/flutter/lib/features/widgets/buttons/primary_button.dart, codebase/flutter/lib/features/widgets/buttons/secondary_button.dart, codebase/flutter/lib/features/widgets/buttons/text_button_custom.dart, codebase/flutter/lib/features/widgets/cards/info_card.dart, codebase/flutter/lib/features/widgets/cards/stat_card.dart, codebase/flutter/lib/features/widgets/dialogs/confirmation_dialog.dart, codebase/flutter/lib/features/widgets/dialogs/info_dialog.dart, codebase/flutter/lib/features/widgets/dialogs/loading_dialog.dart, codebase/flutter/lib/features/widgets/inputs/dropdown_field.dart, codebase/flutter/lib/features/widgets/inputs/password_field.dart, codebase/flutter/lib/features/widgets/inputs/search_field.dart, codebase/flutter/lib/features/widgets/inputs/text_field_custom.dart, codebase/flutter/lib/features/widgets/lists/list_tile_custom.dart, codebase/flutter/lib/features/widgets/loading/empty_widget.dart, codebase/flutter/lib/features/widgets/loading/error_widget.dart, codebase/flutter/lib/features/widgets/loading/loading_widget.dart, codebase/flutter/lib/features/widgets/loading/shimmer_widget.dart, codebase/flutter/lib/features/widgets/widgets.dart, codebase/flutter/lib/l10n/L10N.md, codebase/flutter/lib/l10n/app_localizations.dart, codebase/flutter/lib/l10n/app_localizations_en.dart, codebase/flutter/lib/l10n/app_localizations_vi.dart, codebase/flutter/lib/l10n/app_localizations_zh.dart, codebase/flutter/lib/main.dart, codebase/flutter/lib/screens/SCREENS.md, codebase/flutter/lib/screens/demo_form_screen.dart, codebase/flutter/pubspec.yaml, codebase/flutter/web/favicon.png, codebase/flutter/web/icons/Icon-192.png, codebase/flutter/web/icons/Icon-512.png, codebase/flutter/web/icons/Icon-maskable-192.png, codebase/flutter/web/icons/Icon-maskable-512.png, codebase/flutter/web/index.html, codebase/flutter/web/manifest.json
+
+- **6ad8b4c** by Nguyen Huu Nhan (23 hours ago)
+  📌 Branch: `main`
+  update
+  📦 Modules: `other`
+  Files: CLAUDE.md, README.md, commands/README.md, commands/ck-help.md, hooks/README.md, hooks/dev-rules-reminder/README.md, hooks/discord-notify/README.md, hooks/scout-block/README.md, hooks/telegram-notify/README.md
+
+## 2026-01-30
+
 - **f13a1ee** by Nguyen Huu Nhan (1 second ago)
   📌 Branch: `main`
   test: verify branch and module info in CHANGES.md
