@@ -1,6 +1,6 @@
 # Construction Project Context
 
-**Auto-generated AI Context** - Last updated: 2026-01-30T08:25:38.582Z
+**Auto-generated AI Context** - Last updated: 2026-01-30T08:25:45.139Z
 
 > This file provides comprehensive context for AI assistants working on this codebase.
 > It tracks what changed, why, and what impacts those changes have.
@@ -22,14 +22,14 @@
 
 ### other
 
-- **86 commit(s)** in last 24h
+- **89 commit(s)** in last 24h
 - **49 file(s)** changed
 - ⚠️  **Updated**: Check [other.md](../modules/other.md) for latest changes
 
 **Recent changes:**
-- feat: prepare auto-doc-sync MCP server for deployment (c3c6b55)
-- feat: prepare auto-doc-sync MCP server for deployment (c3c6b55)
-- feat: prepare auto-doc-sync MCP server for deployment (c3c6b55)
+- chore: auto-doc-sync hook generated documentation (e915fee)
+- chore: auto-doc-sync hook generated documentation (e915fee)
+- chore: auto-doc-sync hook generated documentation (e915fee)
 
 **Key files modified:**
 - codebase/flutter/CHANGES.md
@@ -45,9 +45,9 @@
 
 ### What AI Should Know:
 
-1. **Activity Level**: 13 commit(s) in last 24h
+1. **Activity Level**: 14 commit(s) in last 24h
 2. **Most Active Modules**:
-   - `other`: 86 commits - **High activity, coordinate before changes**
+   - `other`: 89 commits - **High activity, coordinate before changes**
 
 ### Current Codebase State:
 
