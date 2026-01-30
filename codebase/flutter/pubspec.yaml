@@ -2,6 +2,7 @@ name: construction_project
 description: "A new Flutter project. By Teams"
 publish_to: 'none'
 version: 1.0.0+1
+# Test: Library update detection
 
 environment:
   sdk: ^3.8.1
