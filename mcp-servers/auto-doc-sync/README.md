@@ -150,6 +150,40 @@ User: Run auto-doc-sync hook manually
 
 Claude có thể đọc các files này trực tiếp qua MCP resources.
 
+## 🤖 MCP Prompts Available
+
+### Auto-generated prompts theo tech stack của project:
+
+**4 prompts tự động customize** dựa trên Flutter/Node.js/Python/Ruby/Go:
+
+1. **`sync-and-review`** - Xem changes + recommendations tránh conflicts
+   ```
+   User: Use prompt sync-and-review
+   ```
+
+2. **`onboarding-guide`** - Tạo hướng dẫn onboarding cho dev mới
+   ```
+   User: Use prompt onboarding-guide
+   ```
+
+3. **`tech-stack-analysis`** - Best practices cho tech stack hiện tại
+   ```
+   User: Use prompt tech-stack-analysis
+   ```
+
+4. **`module-coordination`** - Check module nào cần coordinate
+   ```
+   User: Use prompt module-coordination for widgets
+   ```
+
+**Tất cả prompts tự động:**
+- ✅ Detect tech stack (Flutter, Node.js, Python, etc.)
+- ✅ Read CONTEXT.md để hiểu current state
+- ✅ Generate language-specific best practices
+- ✅ Output bằng Tiếng Việt cho team
+
+📖 **Chi tiết**: Xem [PROMPTS.md](PROMPTS.md)
+
 ## 🎨 Workflow Thực Tế
 
 ### Kịch Bản 1: Dev Bắt Đầu Làm Feature Mới
