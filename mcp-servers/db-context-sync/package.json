@@ -1,0 +1,35 @@
+{
+  "name": "@isc/db-context-sync-mcp",
+  "version": "1.0.0",
+  "description": "MCP Server for automatic database schema documentation with Mermaid diagrams",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "db-context-sync-mcp": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "mcp",
+    "database",
+    "documentation",
+    "mermaid",
+    "schema",
+    "mysql",
+    "postgresql",
+    "sqlite",
+    "prisma"
+  ],
+  "author": "NhanNH26",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "mysql2": "^3.11.5",
+    "pg": "^8.13.1",
+    "better-sqlite3": "^11.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
