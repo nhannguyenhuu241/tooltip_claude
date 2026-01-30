@@ -4,7 +4,8 @@
       "Bash(chmod:*)",
       "Bash(ls:*)",
       "Bash(xargs:*)",
-      "Bash(./integrate.sh:*)"
+      "Bash(./integrate.sh:*)",
+      "Bash(tree:*)"
     ]
   }
 }
