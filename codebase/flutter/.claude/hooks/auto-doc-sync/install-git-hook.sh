@@ -27,6 +27,10 @@ print_warning() {
     echo -e "${YELLOW}⚠️  $1${NC}"
 }
 
+# Get current directory (where script is located)
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/../../.." && pwd )"
+
 # Get git root directory
 GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 
@@ -36,11 +40,13 @@ if [ -z "$GIT_ROOT" ]; then
 fi
 
 print_info "Git root: $GIT_ROOT"
+print_info "Project root: $PROJECT_ROOT"
 
 # Check if auto-doc-sync.js exists
-if [ ! -f "$GIT_ROOT/.claude/hooks/auto-doc-sync/auto-doc-sync.js" ]; then
+AUTO_DOC_SYNC="$PROJECT_ROOT/.claude/hooks/auto-doc-sync/auto-doc-sync.js"
+if [ ! -f "$AUTO_DOC_SYNC" ]; then
     echo "❌ Error: auto-doc-sync.js not found"
-    echo "Expected location: $GIT_ROOT/.claude/hooks/auto-doc-sync/auto-doc-sync.js"
+    echo "Expected location: $AUTO_DOC_SYNC"
     exit 1
 fi
 
@@ -57,8 +63,11 @@ if [ -f "$GIT_ROOT/.git/hooks/post-commit" ]; then
     print_success "Backup created"
 fi
 
+# Calculate relative path from git root to project root
+REL_PATH=$(python3 -c "import os.path; print(os.path.relpath('$PROJECT_ROOT', '$GIT_ROOT'))")
+
 # Create post-commit hook
-cat > "$GIT_ROOT/.git/hooks/post-commit" << 'EOF'
+cat > "$GIT_ROOT/.git/hooks/post-commit" << EOF
 #!/bin/sh
 
 # Auto-Doc-Sync Git Hook
@@ -67,14 +76,17 @@ cat > "$GIT_ROOT/.git/hooks/post-commit" << 'EOF'
 echo "🔄 Auto-Doc-Sync: Analyzing recent changes..."
 
 # Get git root
-GIT_ROOT=$(git rev-parse --show-toplevel)
+GIT_ROOT=\$(git rev-parse --show-toplevel)
+
+# Project is at: $REL_PATH relative to git root
+PROJECT_ROOT="\$GIT_ROOT/$REL_PATH"
 
 # Run the auto-doc-sync script
-if [ -f "$GIT_ROOT/.claude/hooks/auto-doc-sync/auto-doc-sync.js" ]; then
-    cd "$GIT_ROOT"
+if [ -f "\$PROJECT_ROOT/.claude/hooks/auto-doc-sync/auto-doc-sync.js" ]; then
+    cd "\$PROJECT_ROOT"
     node .claude/hooks/auto-doc-sync/auto-doc-sync.js
 else
-    echo "⚠️  Warning: auto-doc-sync.js not found"
+    echo "⚠️  Warning: auto-doc-sync.js not found at \$PROJECT_ROOT"
 fi
 
 exit 0

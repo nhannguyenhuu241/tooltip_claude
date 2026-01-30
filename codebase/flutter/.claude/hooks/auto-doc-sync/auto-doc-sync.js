@@ -15,30 +15,31 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 const path = require('path');
 
-// Read hook input
-let hookInput;
+// Check if running from Git hook (no stdin) or PostToolUse (has stdin)
+let isGitHookMode = false;
+let data = null;
+
+// Try to read stdin (PostToolUse mode)
 try {
-  hookInput = fs.readFileSync(0, 'utf-8');
+  const stat = fs.fstatSync(0);
+  if (stat.size > 0) {
+    const hookInput = fs.readFileSync(0, 'utf-8');
+    data = JSON.parse(hookInput);
+
+    // Check if this is a git operation
+    const isGitOperation = data.tool_name === 'Bash' &&
+      data.tool_input?.command?.match(/git\s+(commit|push|pull|merge)/);
+
+    if (!isGitOperation) {
+      process.exit(0); // Allow non-git operations
+    }
+  } else {
+    // No stdin input = Git hook mode
+    isGitHookMode = true;
+  }
 } catch (error) {
-  console.error('ERROR: Cannot read hook input');
-  process.exit(2);
-}
-
-// Parse input
-let data;
-try {
-  data = JSON.parse(hookInput);
-} catch (error) {
-  console.error('ERROR: Invalid JSON input');
-  process.exit(2);
-}
-
-// Check if this is a git operation
-const isGitOperation = data.tool_name === 'Bash' &&
-  data.tool_input?.command?.match(/git\s+(commit|push|pull|merge)/);
-
-if (!isGitOperation) {
-  process.exit(0); // Allow non-git operations
+  // No stdin = Git hook mode
+  isGitHookMode = true;
 }
 
 // Get project directory
@@ -68,6 +69,31 @@ function exec(command) {
 }
 
 /**
+ * Get current branch name
+ */
+function getCurrentBranch() {
+  return exec('git rev-parse --abbrev-ref HEAD') || 'unknown';
+}
+
+/**
+ * Get branch name for a specific commit
+ */
+function getBranchForCommit(hash) {
+  // Try to get branch from commit
+  const branches = exec(`git branch --contains ${hash} 2>/dev/null`);
+  if (branches) {
+    const lines = branches.split('\n');
+    for (const line of lines) {
+      if (line.includes('*')) {
+        return line.replace('*', '').trim();
+      }
+    }
+    return lines[0]?.trim() || getCurrentBranch();
+  }
+  return getCurrentBranch();
+}
+
+/**
  * Get recent git changes
  */
 function getRecentChanges() {
@@ -89,7 +115,9 @@ function getRecentChanges() {
         author,
         time,
         message,
-        files: []
+        branch: getBranchForCommit(hash),
+        files: [],
+        modules: new Set()
       };
       commits.push(currentCommit);
     } else if (line.trim() && currentCommit) {
@@ -98,8 +126,16 @@ function getRecentChanges() {
       if (match) {
         const [, status, file] = match;
         currentCommit.files.push({ status, file });
+        // Detect module for this file
+        const module = detectFlutterModule(file);
+        currentCommit.modules.add(module);
       }
     }
+  });
+
+  // Convert Set to Array
+  commits.forEach(commit => {
+    commit.modules = Array.from(commit.modules);
   });
 
   return commits;
@@ -200,9 +236,23 @@ function updateChangesFile(commits) {
   let newEntries = `## ${now}\n\n`;
 
   commits.forEach(commit => {
+    // Header line with hash, author, time
     newEntries += `- **${commit.hash}** by ${commit.author} (${commit.time})\n`;
+
+    // Branch info
+    if (commit.branch) {
+      newEntries += `  📌 Branch: \`${commit.branch}\`\n`;
+    }
+
+    // Commit message
     newEntries += `  ${commit.message}\n`;
 
+    // Modules affected
+    if (commit.modules && commit.modules.length > 0) {
+      newEntries += `  📦 Modules: ${commit.modules.map(m => `\`${m}\``).join(', ')}\n`;
+    }
+
+    // Files changed
     if (commit.files.length > 0) {
       newEntries += `  Files: ${commit.files.map(f => f.file).join(', ')}\n`;
     }

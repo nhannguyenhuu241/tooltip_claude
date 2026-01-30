@@ -5,7 +5,11 @@
       "Bash(ls:*)",
       "Bash(xargs:*)",
       "Bash(./integrate.sh:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(./.claude/hooks/auto-doc-sync/install-git-hook.sh)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git rm:*)"
     ]
   }
 }
