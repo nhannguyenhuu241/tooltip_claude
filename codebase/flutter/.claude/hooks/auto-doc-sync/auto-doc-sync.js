@@ -232,10 +232,35 @@ function updateChangesFile(commits) {
     content = '# Changes Log\n\nTrack all changes to the Construction Project codebase.\n\n';
   }
 
-  // Generate new entries
-  let newEntries = `## ${now}\n\n`;
+  // Extract existing commit hashes to avoid duplicates
+  const existingHashes = new Set();
+  const hashRegex = /- \*\*([a-f0-9]{7})\*\*/g;
+  let match;
+  while ((match = hashRegex.exec(content)) !== null) {
+    existingHashes.add(match[1]);
+  }
 
-  commits.forEach(commit => {
+  // Filter out commits that already exist
+  const newCommits = commits.filter(commit => !existingHashes.has(commit.hash));
+
+  // If no new commits, skip update
+  if (newCommits.length === 0) {
+    console.log('✓ No new commits to add to CHANGES.md');
+    return;
+  }
+
+  // Generate new entries
+  let newEntries = '';
+
+  // Check if today's section already exists
+  const todayHeader = `## ${now}`;
+  const hasTodaySection = content.includes(todayHeader);
+
+  if (!hasTodaySection) {
+    newEntries += `${todayHeader}\n\n`;
+  }
+
+  newCommits.forEach(commit => {
     // Header line with hash, author, time
     newEntries += `- **${commit.hash}** by ${commit.author} (${commit.time})\n`;
 
@@ -259,16 +284,27 @@ function updateChangesFile(commits) {
     newEntries += '\n';
   });
 
-  // Insert new entries after header
-  const headerEnd = content.indexOf('\n\n') + 2;
-  const updatedContent = content.slice(0, headerEnd) +
-                         newEntries +
-                         content.slice(headerEnd);
+  // Insert new entries
+  let updatedContent;
+  if (hasTodaySection) {
+    // Insert after today's header
+    const todayHeaderIndex = content.indexOf(todayHeader);
+    const insertPosition = content.indexOf('\n\n', todayHeaderIndex) + 2;
+    updatedContent = content.slice(0, insertPosition) +
+                     newEntries +
+                     content.slice(insertPosition);
+  } else {
+    // Insert after main header
+    const headerEnd = content.indexOf('\n\n') + 2;
+    updatedContent = content.slice(0, headerEnd) +
+                     newEntries +
+                     content.slice(headerEnd);
+  }
 
   // Write back
   fs.writeFileSync(config.changesFile, updatedContent, 'utf8');
 
-  console.log(`✓ Updated ${config.changesFile}`);
+  console.log(`✓ Updated ${config.changesFile} with ${newCommits.length} new commit(s)`);
 }
 
 /**
