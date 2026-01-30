@@ -277,6 +277,33 @@ function updateChangesFile(commits) {
       newEntries += `  📦 Modules: ${commit.modules.map(m => `\`${m}\``).join(', ')}\n`;
     }
 
+    // Check for dependency file changes
+    const dependencyFiles = commit.files.filter(f =>
+      f.file.endsWith('pubspec.yaml') ||
+      f.file.endsWith('package.json') ||
+      f.file.endsWith('requirements.txt') ||
+      f.file.endsWith('Gemfile') ||
+      f.file.endsWith('go.mod')
+    );
+
+    if (dependencyFiles.length > 0) {
+      // Detect which package manager
+      let installCommand = '';
+      if (dependencyFiles.some(f => f.file.endsWith('pubspec.yaml'))) {
+        installCommand = 'flutter pub get';
+      } else if (dependencyFiles.some(f => f.file.endsWith('package.json'))) {
+        installCommand = 'npm install';
+      } else if (dependencyFiles.some(f => f.file.endsWith('requirements.txt'))) {
+        installCommand = 'pip install -r requirements.txt';
+      } else if (dependencyFiles.some(f => f.file.endsWith('Gemfile'))) {
+        installCommand = 'bundle install';
+      } else if (dependencyFiles.some(f => f.file.endsWith('go.mod'))) {
+        installCommand = 'go mod download';
+      }
+
+      newEntries += `  ⚠️  **Dependencies updated** - Run: \`${installCommand}\`\n`;
+    }
+
     // Files changed
     if (commit.files.length > 0) {
       newEntries += `  Files: ${commit.files.map(f => f.file).join(', ')}\n`;
@@ -373,37 +400,214 @@ function updateContext(commits, moduleChanges) {
     fs.mkdirSync(contextDir, { recursive: true });
   }
 
-  let content = '';
-  if (fs.existsSync(contextPath)) {
-    content = fs.readFileSync(contextPath, 'utf8');
-  } else {
-    content = `# Construction Project Context\n\nAuto-generated context for team synchronization.\n\n## Current State\n\nLast updated: ${new Date().toISOString()}\n\n`;
+  const now = new Date().toISOString();
+
+  // Build comprehensive context
+  let contextContent = `# Construction Project Context
+
+**Auto-generated AI Context** - Last updated: ${now}
+
+> This file provides comprehensive context for AI assistants working on this codebase.
+> It tracks what changed, why, and what impacts those changes have.
+
+---
+
+## 🎯 Recent Changes Summary (Last 24h)
+
+`;
+
+  // Detect change types
+  const changeTypes = {
+    features: [],
+    fixes: [],
+    refactors: [],
+    breaking: [],
+    dependencies: [],
+    docs: [],
+    tests: [],
+    other: []
+  };
+
+  commits.forEach(commit => {
+    const msg = commit.message.toLowerCase();
+    const entry = {
+      hash: commit.hash,
+      message: commit.message,
+      modules: Array.from(commit.modules),
+      branch: commit.branch
+    };
+
+    if (msg.includes('breaking') || msg.includes('!:')) {
+      changeTypes.breaking.push(entry);
+    } else if (msg.startsWith('feat')) {
+      changeTypes.features.push(entry);
+    } else if (msg.startsWith('fix')) {
+      changeTypes.fixes.push(entry);
+    } else if (msg.startsWith('refactor')) {
+      changeTypes.refactors.push(entry);
+    } else if (msg.includes('pubspec') || msg.includes('package.json') || msg.includes('dependencies')) {
+      changeTypes.dependencies.push(entry);
+    } else if (msg.startsWith('docs')) {
+      changeTypes.docs.push(entry);
+    } else if (msg.startsWith('test')) {
+      changeTypes.tests.push(entry);
+    } else {
+      changeTypes.other.push(entry);
+    }
+  });
+
+  // Breaking Changes (highest priority)
+  if (changeTypes.breaking.length > 0) {
+    contextContent += `### ⚠️ BREAKING CHANGES (${changeTypes.breaking.length})\n\n`;
+    contextContent += `**IMPORTANT**: These changes may break existing code!\n\n`;
+    changeTypes.breaking.forEach(change => {
+      contextContent += `- **${change.hash}**: ${change.message}\n`;
+      contextContent += `  - Modules: ${change.modules.join(', ')}\n`;
+      contextContent += `  - Branch: ${change.branch}\n\n`;
+    });
   }
 
-  // Update "Last updated" timestamp
-  content = content.replace(
-    /Last updated: .+/,
-    `Last updated: ${new Date().toISOString()}`
-  );
-
-  // Add summary section if not exists
-  if (!content.includes('## Recent Activity Summary')) {
-    content += '\n## Recent Activity Summary\n\n';
+  // New Features
+  if (changeTypes.features.length > 0) {
+    contextContent += `### ✨ New Features (${changeTypes.features.length})\n\n`;
+    changeTypes.features.forEach(change => {
+      contextContent += `- **${change.hash}**: ${change.message}\n`;
+      if (change.modules.length > 0) {
+        contextContent += `  - Affects: ${change.modules.join(', ')}\n`;
+      }
+    });
+    contextContent += '\n';
   }
 
-  // Generate summary
-  const summary = `### Last 24 Hours\n\n`;
-  const moduleList = Object.keys(moduleChanges).map(module => {
-    const count = moduleChanges[module].commits.length;
-    return `- **${module}**: ${count} commit(s)`;
-  }).join('\n');
+  // Bug Fixes
+  if (changeTypes.fixes.length > 0) {
+    contextContent += `### 🐛 Bug Fixes (${changeTypes.fixes.length})\n\n`;
+    changeTypes.fixes.forEach(change => {
+      contextContent += `- **${change.hash}**: ${change.message}\n`;
+      if (change.modules.length > 0) {
+        contextContent += `  - Fixed in: ${change.modules.join(', ')}\n`;
+      }
+    });
+    contextContent += '\n';
+  }
 
-  content = content.replace(
-    /## Recent Activity Summary[\s\S]*?(?=\n## |$)/,
-    `## Recent Activity Summary\n\n${summary}${moduleList}\n\n`
-  );
+  // Dependency Updates
+  if (changeTypes.dependencies.length > 0) {
+    contextContent += `### 📦 Dependencies Updated (${changeTypes.dependencies.length})\n\n`;
+    contextContent += `**Action Required**: Run dependency installation after pulling these changes.\n\n`;
+    changeTypes.dependencies.forEach(change => {
+      contextContent += `- **${change.hash}**: ${change.message}\n`;
+    });
+    contextContent += '\n';
+  }
 
-  fs.writeFileSync(contextPath, content, 'utf8');
+  // Refactoring
+  if (changeTypes.refactors.length > 0) {
+    contextContent += `### 🔨 Code Refactoring (${changeTypes.refactors.length})\n\n`;
+    changeTypes.refactors.forEach(change => {
+      contextContent += `- **${change.hash}**: ${change.message}\n`;
+      if (change.modules.length > 0) {
+        contextContent += `  - Modules: ${change.modules.join(', ')}\n`;
+      }
+    });
+    contextContent += '\n';
+  }
+
+  // Module Activity Analysis
+  contextContent += `---
+
+## 📊 Module Activity Analysis
+
+`;
+
+  Object.keys(moduleChanges).forEach(moduleName => {
+    const module = moduleChanges[moduleName];
+    contextContent += `### ${moduleName}\n\n`;
+    contextContent += `- **${module.commits.length} commit(s)** in last 24h\n`;
+    contextContent += `- **${module.files.length} file(s)** changed\n\n`;
+
+    // Show recent changes for this module
+    contextContent += `**Recent changes:**\n`;
+    module.commits.slice(0, 3).forEach(commit => {
+      contextContent += `- ${commit.message} (${commit.hash})\n`;
+    });
+
+    if (module.files.length > 0) {
+      contextContent += `\n**Key files modified:**\n`;
+      module.files.slice(0, 5).forEach(file => {
+        contextContent += `- ${file}\n`;
+      });
+      if (module.files.length > 5) {
+        contextContent += `- ... and ${module.files.length - 5} more\n`;
+      }
+    }
+    contextContent += '\n';
+  });
+
+  // AI Context Section
+  contextContent += `---
+
+## 🤖 AI Context & Recommendations
+
+### What AI Should Know:
+
+`;
+
+  // Detect patterns
+  const totalChanges = commits.length;
+  const hotspots = Object.entries(moduleChanges)
+    .sort((a, b) => b[1].commits.length - a[1].commits.length)
+    .slice(0, 3);
+
+  contextContent += `1. **Activity Level**: ${totalChanges} commit(s) in last 24h\n`;
+
+  if (hotspots.length > 0) {
+    contextContent += `2. **Most Active Modules**:\n`;
+    hotspots.forEach(([module, data]) => {
+      contextContent += `   - \`${module}\`: ${data.commits.length} commits - **High activity, coordinate before changes**\n`;
+    });
+  }
+
+  if (changeTypes.breaking.length > 0) {
+    contextContent += `3. **Breaking Changes Present**: Review migration guides before implementing features\n`;
+  }
+
+  if (changeTypes.dependencies.length > 0) {
+    contextContent += `4. **Dependencies Changed**: Ensure all packages are up-to-date before coding\n`;
+  }
+
+  contextContent += `
+### Current Codebase State:
+
+- **Architecture**: Flutter with Provider pattern
+- **State Management**: Provider-based
+- **Theme System**: Custom theme with AppColors, AppTextStyles
+- **Localization**: Multi-language support (en, vi, zh)
+- **Modules**: Modular architecture with core + feature modules
+
+### Before You Code:
+
+1. Check recent changes in modules you'll modify
+2. Review breaking changes if any
+3. Update dependencies if needed
+4. Read module-specific docs in \`docs/modules/\`
+5. Coordinate with team on highly active modules
+
+---
+
+## 📚 Quick Links
+
+- [CHANGES.md](../../CHANGES.md) - Full changelog
+- [Module Docs](../modules/) - Per-module documentation
+- [Theme System](../context/libs/theme-system.md) - Theme guide
+- [Provider Pattern](../context/libs/provider-pattern.md) - State management
+
+---
+
+*Auto-generated by auto-doc-sync hook. Do not edit manually.*
+`;
+
+  fs.writeFileSync(contextPath, contextContent, 'utf8');
   console.log(`✓ Updated ${contextPath}`);
 }
 
