@@ -1,31 +1,73 @@
 ---
-command: sync
-description: Đồng bộ và xem thay đổi trong team. Giúp dev hiểu context hiện tại và changes gần đây.
+description: Pull latest + đồng bộ team context + kiểm tra conflict. Giúp dev hiểu changes gần đây trước khi code.
+argument-hint: [module-name]
 ---
 
 # Team Sync Command
 
-Command này giúp developers trong team lớn (100+ người) nắm được:
-- Ai đã thay đổi gì
-- Module nào bị ảnh hưởng
-- Context hiện tại của dự án
-- Conflicts tiềm năng
-
-## Khi Nào Dùng
-
-- Sau khi `git pull` - Xem ai commit gì
-- Trước khi code - Hiểu context module
-- Khi gặp conflict - Xem ai đang làm gì
-- Daily standup - Summary changes
+Command này giúp developers nắm được:
+- Ai đã thay đổi gì (từ CHANGES.md + CONTEXT.md)
+- Module nào đang hot (conflict risk)
+- Local changes có conflict với remote không
 
 ## Usage
 
 ```
-/sync                    # Xem all changes
-/sync auth              # Xem changes của module auth
-/sync @username         # Xem changes của user
-/sync --diff            # So sánh detailed diff
+/sync                    # Pull + sync all
+/sync auth              # Pull + deep dive module auth
 ```
+
+## Workflow
+
+### Bước 0: Pull Latest + Cập nhật docs
+
+1. Hỏi user: "Pull latest từ remote trước khi sync?" (dùng `AskUserQuestion`)
+   - "Yes, git pull --rebase" → chạy `git pull --rebase`
+   - "No, chỉ đọc local" → skip
+2. Nếu đã pull, chạy auto-doc-sync hook thủ công để cập nhật docs:
+   - `node .claude/hooks/auto-doc-sync/auto-doc-sync.js` (nếu tồn tại)
+   - Nếu không tồn tại, skip
+
+### Bước 1: Conflict Check
+
+1. Chạy `git status` → lấy danh sách uncommitted changes
+2. Chạy `git log --oneline -10` → 10 commit gần nhất từ remote
+3. So sánh: file nào local đang sửa mà remote cũng vừa thay đổi → cảnh báo:
+   ```
+   ⚠️ Conflict Risk:
+   - src/auth/login.ts — bạn đang sửa, @john cũng commit 2h trước
+   - src/api/routes.ts — bạn đang sửa, @sarah commit 4h trước
+   ```
+
+### Bước 2: Đọc Team Context
+
+1. Read `docs/CONTEXT.md` (AI context tổng hợp)
+2. Read `CHANGES.md` (10 commit gần nhất)
+3. Nếu có `$ARGUMENTS` (module name):
+   - Read `docs/modules/{module}.md` cho deep dive
+
+### Bước 3: Summary
+
+Tổng hợp output:
+
+```markdown
+📊 **Team Activity (Last 24h)**
+
+3 modules changed:
+- auth (5 commits) — ⚠️ HIGH ACTIVITY
+- api (3 commits)
+- ui (1 commit)
+
+⚠️ **Conflict Risk**:
+- src/auth/login.ts — bạn sửa, @john cũng commit
+- (hoặc "Không có conflict risk" nếu sạch)
+
+💡 **Recommendations**:
+- Coordinate với @john trước khi sửa auth
+- Run `npm install` (dependencies updated)
+```
+
+---
 
 ## Output Mong Đợi
 

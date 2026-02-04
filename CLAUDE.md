@@ -4,91 +4,48 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is the **Anthropic Skills Repository** - a collection of example skills and agents for Claude Code. Skills are folders of instructions, scripts, and resources that Claude loads dynamically to improve performance on specialized tasks.
+This is a **Claude Code extension system** — a collection of skills, agents, hooks, and slash commands designed to be integrated into other projects via `integrate.sh` or manual copy. It is not a runnable application; it is a toolkit.
+
+Documentation (README, INTEGRATION_GUIDE, etc.) is written in Vietnamese.
 
 ## Architecture
 
-### Directory Structure
+The four main component types follow a modular folder-per-component pattern:
 
-```
-tooltip_claude/
-├── .claude/               # Core configuration
-│   ├── settings.json
-│   └── statusline.js
-│
-├── agents/                # 8 pre-configured agents (.md files)
-│   ├── code-reviewer.md
-│   ├── debugger.md
-│   └── ... (database-admin, planner, researcher, etc.)
-│
-├── hooks/                 # 4 modular hooks (each in separate folder)
-│   ├── scout-block/       # ⭐ Block heavy directories
-│   │   ├── README.md
-│   │   ├── scout-block.js
-│   │   ├── scout-block.cjs
-│   │   ├── scout-block.sh
-│   │   └── scout-block.ps1
-│   ├── dev-rules-reminder/
-│   ├── discord-notify/
-│   └── telegram-notify/
-│
-├── commands/              # 23 slash commands (modular folders)
-│   ├── cook/              # /cook command
-│   ├── fix/               # /fix + variants (fix:fast, fix:hard, etc.)
-│   ├── plan/              # /plan + variants
-│   └── ... (design, git, test, bootstrap, etc.)
-│
-├── skills/                # 7 skills + document-skills
-│   ├── backend-development/
-│   ├── frontend-development/
-│   ├── mobile-development/
-│   ├── databases/
-│   ├── web-frameworks/
-│   ├── debugging/
-│   ├── research/
-│   └── document-skills/   # PDF, DOCX, PPTX, XLSX (built-in)
-│
-├── assets/                # Screenshots for documentation
-├── integrate.sh           # Auto-integration script
-├── README.md              # Main documentation
-├── INTEGRATION_GUIDE.md   # Integration guide
-└── NETWORK_GUIDE.md       # Network/proxy setup
-```
+- **Skills** (`skills/`): Domain knowledge packages. Each has a `SKILL.md` entry point with YAML frontmatter (`name`, `description` required). Subdirectories use `references/` for reference docs and `scripts/` for executable code. Claude activates relevant skills dynamically based on task context.
+- **Agents** (`agents/`): Preconfigured specialist personas (8 total). Each is a `.md` file with YAML frontmatter (`name`, `description`, `model` fields). Commands like `/cook` orchestrate multiple agents (researcher → planner → ui-ux-designer → tester → code-reviewer → project-manager → docs-manager).
+- **Commands** (`commands/`): Slash commands (23 total). Each folder contains markdown files with YAML frontmatter (`description`, `argument-hint`). Commands use `$ARGUMENTS` for user input. Variants are nested subdirectories (e.g., `fix/fast.md`, `fix/hard.md`).
+- **Hooks** (`hooks/`): Pre/PostToolUse scripts. Each in its own folder with cross-platform implementations (.js, .cjs, .sh, .ps1).
 
-**Key Points:**
-- **Modular design**: Each hook and command in its own folder with README
-- **Easy distribution**: Download individual components
-- **Self-documented**: Each folder contains usage instructions
+## Active Hooks Configuration
 
-### Skill Structure
+Defined in `.claude/settings.json`:
 
-Every skill requires a `SKILL.md` file with YAML frontmatter:
+1. **PreToolUse → Bash**: `scout-block.js` blocks commands accessing `node_modules`, `__pycache__`, `.git/`, `dist/`, `build/` (exit code 2 = block, 0 = allow)
+2. **PostToolUse → Write|Edit**: `modularization-hook.js` runs after file writes/edits
 
-```markdown
----
-name: skill-name          # Required: lowercase, hyphen-separated
-description: When to use  # Required: description for Claude
-license: Apache-2.0       # Optional
-allowed-tools: [...]      # Optional: pre-approved tools
----
+## Key Conventions
 
-# Instructions go here
-```
+- **Plan directory structure**: Commands like `/cook` and `/plan` create `plans/YYYYMMDD-HHmm-plan-name/` with `plan.md` (overview, ≤80 lines) and `phase-XX-phase-name.md` files for each phase.
+- **Inter-agent communication**: Agents exchange reports via markdown files in `./plans/<plan-name>/reports/` using the naming format `YYMMDD-from-agent-name-to-agent-name-task-name-report.md`.
+- **Command routing**: `/fix` acts as an intelligent router, analyzing issue keywords to delegate to specialized variants (`fix:types`, `fix:ui`, `fix:ci`, `fix:test`, `fix:logs`, `fix:hard`, `fix:fast`, `fix:parallel`).
+- **Token efficiency**: Commands and agents emphasize concise output — "sacrifice grammar for the sake of concision."
+- **Exit codes**: Hook scripts use 0 (allow/success) and 2 (block/error).
 
-### Hooks Configuration
-
-The repository uses a PreToolUse hook (`scout-block.js`) that blocks Bash commands accessing heavy directories: `node_modules`, `__pycache__`, `.git/`, `dist/`, `build/`.
-
-## Key Patterns
-
-- **Skills** are self-contained in directories named after the skill
-- **Reference files** go in `references/` or `resources/` subdirectories
-- **Scripts** go in `scripts/` subdirectories (Python, JavaScript, shell)
-- **Document skills** include OOXML schemas for Office format manipulation
-
-## Validating Skills
+## Validating Components
 
 Skills must have:
 1. A `SKILL.md` file as entry point
-2. `name` field matching the directory name
-3. `description` field explaining when Claude should use it
+2. `name` field in frontmatter matching the directory name
+3. `description` field explaining when Claude should activate it
+
+Commands must have:
+1. YAML frontmatter with `description` field
+2. `$ARGUMENTS` placeholder for user input
+
+Agents must have:
+1. YAML frontmatter with `name`, `description`, and `model` fields
+
+## Integration
+
+`integrate.sh <target-project>` copies skills (excluding document-skills), agents, hooks, and statusline into a target project's `.claude/` directory. It creates `settings.json.new` if the target already has settings to avoid overwriting.

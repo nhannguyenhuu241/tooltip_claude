@@ -13,14 +13,46 @@ const path = require('path');
 
 // Get project directory
 const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+const configPath = path.join(projectDir, '.claude/hooks/auto-doc-sync/config.json');
 
 // Configuration
 const config = {
   changesFile: path.join(projectDir, 'CHANGES.md'),
   moduleDocsDir: path.join(projectDir, 'docs/modules'),
   contextFile: path.join(projectDir, 'docs/CONTEXT.md'),
-  maxChangesEntries: 50
+  maxChangesEntries: 50,
+  moduleRules: loadModuleRules()
 };
+
+/**
+ * Load module detection rules from config.json
+ */
+function loadModuleRules() {
+  try {
+    if (fs.existsSync(configPath)) {
+      const data = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (Array.isArray(data.modules) && data.modules.length > 0) {
+        return data.modules;
+      }
+    }
+  } catch (error) {
+    // Config parse error — fall back to default rules
+  }
+  return [];
+}
+
+/**
+ * Match file path against a glob-style pattern
+ * Supports ** (any depth) and * (single segment)
+ */
+function matchesPattern(filePath, pattern) {
+  const regexStr = pattern
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+    .replace(/\*\*/g, '{{GLOBSTAR}}')
+    .replace(/\*/g, '[^/]*')
+    .replace(/{{GLOBSTAR}}/g, '.*');
+  return new RegExp(`^${regexStr}$`).test(filePath);
+}
 
 /**
  * Execute shell command safely
@@ -107,8 +139,17 @@ function getRecentChanges() {
 
 /**
  * Detect Flutter module from file path
+ * Checks custom rules from config.json first, then falls back to Flutter defaults
  */
 function detectFlutterModule(filePath) {
+  // Check custom rules first
+  for (const rule of config.moduleRules) {
+    if (matchesPattern(filePath, rule.pattern)) {
+      return rule.name;
+    }
+  }
+
+  // Fallback: default Flutter detection logic
   if (filePath.startsWith('lib/core/')) {
     const parts = filePath.split('/');
     if (parts.length >= 3) {

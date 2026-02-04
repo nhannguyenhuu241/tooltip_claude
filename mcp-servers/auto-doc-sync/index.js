@@ -624,6 +624,15 @@ Be specific and actionable. Format in Vietnamese.`,
       writeFileSync(dedupeModulesPath, dedupeModulesContent, 'utf-8');
     }
 
+    // Copy team-context-sync hook (PreToolUse — injects team context into Claude)
+    const teamSyncTemplate = join(__dirname, 'templates/team-context-sync.js');
+    if (existsSync(teamSyncTemplate)) {
+      const teamSyncDir = join(project_path, '.claude/hooks/team-context-sync');
+      mkdirSync(teamSyncDir, { recursive: true });
+      const teamSyncContent = readFileSync(teamSyncTemplate, 'utf-8');
+      writeFileSync(join(teamSyncDir, 'team-context-sync.js'), teamSyncContent, 'utf-8');
+    }
+
     // Install as git post-commit hook
     this.installGitHook(project_path, hookPath);
 
@@ -642,17 +651,28 @@ Be specific and actionable. Format in Vietnamese.`,
 - .claude/hooks/auto-doc-sync/auto-doc-sync.js
 - .claude/hooks/auto-doc-sync/deduplicate-changes.js
 - .claude/hooks/auto-doc-sync/deduplicate-module-docs.js
+- .claude/hooks/team-context-sync/team-context-sync.js
 - .git/hooks/post-commit
 - CHANGES.md
 - docs/CONTEXT.md
 - docs/modules/ (directory)
 
 **Next Steps**:
-1. Make a commit to test the hook
-2. Run \`auto-doc-sync-mcp sync\` to view changes
-3. Configure custom modules if needed
+1. Add team-context-sync to your settings.json PreToolUse hooks:
+   \`\`\`json
+   "PreToolUse": [{
+     "matcher": "Bash|Write|Edit",
+     "hooks": [{
+       "type": "command",
+       "command": "node \\"$CLAUDE_PROJECT_DIR\\"/.claude/hooks/team-context-sync/team-context-sync.js"
+     }]
+   }]
+   \`\`\`
+2. Make a commit to test the hook
+3. Run \`auto-doc-sync-mcp sync\` to view changes
+4. Configure custom modules with \`/modules\` command if needed
 
-The hook will now automatically update documentation after every commit!`,
+The hooks will now automatically update documentation after every commit and inject team context into Claude sessions!`,
         },
       ],
     };
