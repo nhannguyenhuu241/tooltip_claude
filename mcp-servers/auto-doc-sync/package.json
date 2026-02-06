@@ -1,6 +1,6 @@
 {
   "name": "auto-doc-sync-mcp",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "MCP Server for automatic documentation synchronization - AI context management for any codebase with multi-dev coordination",
   "main": "index.js",
   "type": "module",
