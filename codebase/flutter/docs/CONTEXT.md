@@ -1,6 +1,6 @@
 # Construction Project Context
 
-**Auto-generated AI Context** - Last updated: 2026-01-30T08:28:56.061Z
+**Auto-generated AI Context** - Last updated: 2026-02-06T03:13:50.548Z
 
 > This file provides comprehensive context for AI assistants working on this codebase.
 > It tracks what changed, why, and what impacts those changes have.
@@ -9,35 +9,28 @@
 
 ## 🎯 Recent Changes Summary (Last 24h)
 
-### ✨ New Features (2)
-
-- **c3c6b55**: feat: prepare auto-doc-sync MCP server for deployment
-  - Affects: other
-- **2a42b28**: feat(docs): improve CONTEXT.md with comprehensive AI context
-  - Affects: other
-
 ---
 
 ## 📊 Module Activity Analysis
 
 ### other
 
-- **102 commit(s)** in last 24h
-- **49 file(s)** changed
+- **37 commit(s)** in last 24h
+- **35 file(s)** changed
 - ⚠️  **Updated**: Check [other.md](../modules/other.md) for latest changes
 
 **Recent changes:**
-- docs: final documentation state (dba18a1)
-- docs: final documentation state (dba18a1)
-- docs: final documentation state (dba18a1)
+- udate (361ac62)
+- udate (361ac62)
+- udate (361ac62)
 
 **Key files modified:**
-- codebase/flutter/CHANGES.md
-- codebase/flutter/docs/CONTEXT.md
-- codebase/flutter/docs/modules/other.md
-- .claude/settings.local.json
-- codebase/flutter/docs/modules/splash.md
-- ... and 44 more
+- mcp-servers/PUBLISH-BOTH.md
+- mcp-servers/auto-doc-sync/.npmignore
+- mcp-servers/auto-doc-sync/CHANGELOG.md
+- mcp-servers/auto-doc-sync/INSTALLATION.md
+- mcp-servers/auto-doc-sync/LICENSE
+- ... and 30 more
 
 ---
 
@@ -45,9 +38,9 @@
 
 ### What AI Should Know:
 
-1. **Activity Level**: 18 commit(s) in last 24h
+1. **Activity Level**: 2 commit(s) in last 24h
 2. **Most Active Modules**:
-   - `other`: 102 commits - **High activity, coordinate before changes**
+   - `other`: 37 commits - **High activity, coordinate before changes**
 
 ### Current Codebase State:
 
