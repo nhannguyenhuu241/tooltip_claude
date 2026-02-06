@@ -27,7 +27,7 @@
 ### 1. Cài MCP Server
 
 ```bash
-npm install -g @claudekit/auto-doc-sync-mcp
+npm install -g auto-doc-sync-mcp
 ```
 
 ### 2. Cấu Hình Claude Desktop

@@ -21,7 +21,7 @@
 ### 1. Cài MCP Server
 
 ```bash
-npm install -g @claudekit/db-context-sync-mcp
+npm install -g db-context-sync-mcp
 ```
 
 ### 2. Cấu Hình Claude Desktop

@@ -1,0 +1,36 @@
+# Development files
+.gitignore
+.git/
+.DS_Store
+*.log
+npm-debug.log*
+
+# Documentation that's not needed in npm package
+docs/
+commands/
+
+# Installation script (only for local development)
+install.sh
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files (if any)
+test/
+tests/
+*.test.js
+*.spec.js
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Misc
+node_modules/
+coverage/
+.nyc_output/

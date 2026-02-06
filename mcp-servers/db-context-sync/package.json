@@ -1,28 +1,59 @@
 {
-  "name": "@isc/db-context-sync-mcp",
+  "name": "db-context-sync-mcp",
   "version": "1.0.0",
-  "description": "MCP Server for automatic database schema documentation with Mermaid diagrams",
+  "description": "MCP Server for automatic database schema documentation with Mermaid diagrams - Prisma, MySQL, PostgreSQL, SQLite support",
   "type": "module",
   "main": "index.js",
   "bin": {
     "db-context-sync-mcp": "./index.js"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "prepublishOnly": "node -e \"console.log('Publishing db-context-sync-mcp v' + require('./package.json').version)\""
   },
   "keywords": [
     "mcp",
+    "model-context-protocol",
     "database",
     "documentation",
     "mermaid",
     "schema",
+    "erd",
     "mysql",
     "postgresql",
     "sqlite",
-    "prisma"
+    "prisma",
+    "claude",
+    "claude-code",
+    "database-schema",
+    "entity-relationship",
+    "auto-documentation"
   ],
   "author": "NhanNH26",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NhanNH26/db-context-sync-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/NhanNH26/db-context-sync-mcp/issues"
+  },
+  "homepage": "https://github.com/NhanNH26/db-context-sync-mcp#readme",
+  "files": [
+    "index.js",
+    "templates/",
+    "examples/",
+    "README.md",
+    "LICENSE",
+    "QUICKSTART.md",
+    "FEATURES_SUMMARY.md",
+    "ARCHITECTURE.md",
+    "COMPLETE_WORKFLOW.md",
+    "DB_HOOKS_GUIDE.md",
+    "DIRECT_DATABASE_SCANNING.md",
+    "SQL_GENERATION.md",
+    "APPROACHES_COMPARISON.md"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
     "mysql2": "^3.11.5",

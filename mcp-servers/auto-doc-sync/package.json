@@ -1,26 +1,55 @@
 {
-  "name": "@isc/auto-doc-sync-mcp",
+  "name": "auto-doc-sync-mcp",
   "version": "1.0.0",
-  "description": "MCP Server for automatic documentation synchronization - AI context management for any codebase",
+  "description": "MCP Server for automatic documentation synchronization - AI context management for any codebase with multi-dev coordination",
   "main": "index.js",
   "type": "module",
   "bin": {
     "auto-doc-sync-mcp": "./index.js"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "prepublishOnly": "node -e \"console.log('Publishing auto-doc-sync-mcp v' + require('./package.json').version)\""
   },
   "keywords": [
     "mcp",
+    "model-context-protocol",
     "documentation",
     "git",
     "team-sync",
     "ai-context",
     "changelog",
-    "auto-sync"
+    "auto-sync",
+    "claude",
+    "claude-code",
+    "multi-dev",
+    "conflict-detection",
+    "flutter",
+    "nodejs",
+    "python",
+    "ruby",
+    "golang"
   ],
   "author": "NhanNH26",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NhanNH26/auto-doc-sync-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/NhanNH26/auto-doc-sync-mcp/issues"
+  },
+  "homepage": "https://github.com/NhanNH26/auto-doc-sync-mcp#readme",
+  "files": [
+    "index.js",
+    "templates/",
+    "README.md",
+    "LICENSE",
+    "QUICKSTART.md",
+    "FEATURES_SUMMARY.md",
+    "MULTI_DEV_COORDINATION.md",
+    "PROMPTS.md"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0"
   },
