@@ -18,6 +18,81 @@ This module will track changes to files that don't belong to other modules.
 
 ### 2026-02-06
 
+- update (b07e729) by Nguyen Huu Nhan
+- update (b07e729) by Nguyen Huu Nhan
+- update (b07e729) by Nguyen Huu Nhan
+- update (b07e729) by Nguyen Huu Nhan
+- update (b07e729) by Nguyen Huu Nhan
+- update (b07e729) by Nguyen Huu Nhan
+- update (b07e729) by Nguyen Huu Nhan
+- update (b07e729) by Nguyen Huu Nhan
+- update (b07e729) by Nguyen Huu Nhan
+- update (b07e729) by Nguyen Huu Nhan
+- update (b07e729) by Nguyen Huu Nhan
+
+Affected files:
+- codebase/flutter/CHANGES.md
+- codebase/flutter/docs/CONTEXT.md
+- codebase/flutter/docs/modules/other.md
+- mcp-servers/CLEANUP.sh
+- mcp-servers/COMPLETE-GUIDE.md
+- mcp-servers/PUBLISH-BOTH.md
+- mcp-servers/QUICK-UPDATE.md
+- mcp-servers/README.md
+- mcp-servers/UPDATE-VERSION.md
+- mcp-servers/auto-doc-sync/package.json
+- mcp-servers/db-context-sync/package.json
+- mcp-servers/db-context-sync/APPROACHES_COMPARISON.md
+- mcp-servers/db-context-sync/ARCHITECTURE.md
+- mcp-servers/db-context-sync/COMPLETE_WORKFLOW.md
+- mcp-servers/db-context-sync/DB_HOOKS_GUIDE.md
+- mcp-servers/db-context-sync/DIRECT_DATABASE_SCANNING.md
+- mcp-servers/db-context-sync/FEATURES_SUMMARY.md
+- mcp-servers/db-context-sync/INSTALLATION.md
+- mcp-servers/db-context-sync/QUICK-PUBLISH.md
+- mcp-servers/db-context-sync/SQL_GENERATION.md
+- mcp-servers/auto-doc-sync/DIAGRAMS.md
+- mcp-servers/auto-doc-sync/FEATURES_SUMMARY.md
+- mcp-servers/auto-doc-sync/INSTALLATION.md
+- mcp-servers/auto-doc-sync/MULTI_DEV_COORDINATION.md
+- mcp-servers/auto-doc-sync/PROMPTS.md
+- mcp-servers/auto-doc-sync/PUBLISHING.md
+- mcp-servers/auto-doc-sync/QUICK-PUBLISH.md
+- mcp-servers/auto-doc-sync/README-NPM.md
+- mcp-servers/auto-doc-sync/commands/modules/modules.md
+- mcp-servers/auto-doc-sync/commands/modules/pick.md
+- mcp-servers/auto-doc-sync/docs/flow.md
+- mcp-servers/auto-doc-sync/architecture.drawio
+- mcp-servers/auto-doc-sync/workflow.drawio
+- mcp-servers/auto-doc-sync/UPDATE.sh
+- mcp-servers/db-context-sync/UPDATE.sh
+- mcp-servers/auto-doc-sync/.npmignore
+- mcp-servers/auto-doc-sync/CHANGELOG.md
+- mcp-servers/auto-doc-sync/LICENSE
+- mcp-servers/auto-doc-sync/PUBLISH-NOW.sh
+- mcp-servers/auto-doc-sync/README.md
+- mcp-servers/db-context-sync/.npmignore
+- mcp-servers/db-context-sync/CHANGELOG.md
+- mcp-servers/db-context-sync/LICENSE
+- mcp-servers/db-context-sync/PUBLISH-NOW.sh
+- mcp-servers/db-context-sync/README.md
+- codebase/flutter/.claude/hooks/multi-dev-coord/conflict-checker.js
+- codebase/flutter/.claude/hooks/multi-dev-coord/remote-sync-checker.js
+- codebase/flutter/.claude/hooks/multi-dev-coord/session-manager.js
+- codebase/flutter/.claude/hooks/multi-dev-coord/wip-tracker.js
+- codebase/flutter/.claude/settings.json
+- codebase/flutter/.gitignore
+- mcp-servers/auto-doc-sync/index.js
+- mcp-servers/auto-doc-sync/templates/conflict-checker.js
+- mcp-servers/auto-doc-sync/templates/remote-sync-checker.js
+- mcp-servers/auto-doc-sync/templates/session-manager.js
+- mcp-servers/auto-doc-sync/templates/wip-tracker.js
+- mcp-servers/db-context-sync/index.js
+- mcp-servers/db-context-sync/templates/db-context-inject.js
+- mcp-servers/db-context-sync/templates/db-schema-watcher.js
+
+### 2026-02-06
+
 - feat: new feature (1b41a16) by Nguyen Huu Nhan
 - feat: new feature (1b41a16) by Nguyen Huu Nhan
 - feat: new feature (1b41a16) by Nguyen Huu Nhan
