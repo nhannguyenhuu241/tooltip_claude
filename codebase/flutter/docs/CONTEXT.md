@@ -1,6 +1,6 @@
 # Construction Project Context
 
-**Auto-generated AI Context** - Last updated: 2026-02-06T03:13:50.548Z
+**Auto-generated AI Context** - Last updated: 2026-02-06T03:15:21.569Z
 
 > This file provides comprehensive context for AI assistants working on this codebase.
 > It tracks what changed, why, and what impacts those changes have.
@@ -15,22 +15,22 @@
 
 ### other
 
-- **37 commit(s)** in last 24h
-- **35 file(s)** changed
+- **44 commit(s)** in last 24h
+- **42 file(s)** changed
 - ⚠️  **Updated**: Check [other.md](../modules/other.md) for latest changes
 
 **Recent changes:**
-- udate (361ac62)
-- udate (361ac62)
-- udate (361ac62)
+- update (4eb8a66)
+- update (4eb8a66)
+- update (4eb8a66)
 
 **Key files modified:**
-- mcp-servers/PUBLISH-BOTH.md
-- mcp-servers/auto-doc-sync/.npmignore
-- mcp-servers/auto-doc-sync/CHANGELOG.md
-- mcp-servers/auto-doc-sync/INSTALLATION.md
-- mcp-servers/auto-doc-sync/LICENSE
-- ... and 30 more
+- codebase/flutter/CHANGES.md
+- codebase/flutter/docs/CONTEXT.md
+- codebase/flutter/docs/modules/other.md
+- mcp-servers/QUICK-UPDATE.md
+- mcp-servers/UPDATE-VERSION.md
+- ... and 37 more
 
 ---
 
@@ -38,9 +38,9 @@
 
 ### What AI Should Know:
 
-1. **Activity Level**: 2 commit(s) in last 24h
+1. **Activity Level**: 3 commit(s) in last 24h
 2. **Most Active Modules**:
-   - `other`: 37 commits - **High activity, coordinate before changes**
+   - `other`: 44 commits - **High activity, coordinate before changes**
 
 ### Current Codebase State:
 

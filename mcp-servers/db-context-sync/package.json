@@ -33,12 +33,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/NhanNH26/db-context-sync-mcp.git"
+    "url": "https://github.com/nhannguyenhuu241/tooltip_claude/tree/main/mcp-servers/db-context-sync"
   },
   "bugs": {
-    "url": "https://github.com/NhanNH26/db-context-sync-mcp/issues"
+    "url": "https://github.com/nhannguyenhuu241/tooltip_claude/issues"
   },
-  "homepage": "https://github.com/NhanNH26/db-context-sync-mcp#readme",
+  "homepage": "https://github.com/nhannguyenhuu241/tooltip_claude/tree/main/mcp-servers/db-context-sync#readme",
   "files": [
     "index.js",
     "templates/",

@@ -34,12 +34,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/NhanNH26/auto-doc-sync-mcp.git"
+    "url": "https://github.com/nhannguyenhuu241/tooltip_claude/tree/main/mcp-servers/auto-doc-sync"
   },
   "bugs": {
-    "url": "https://github.com/NhanNH26/auto-doc-sync-mcp/issues"
+    "url": "https://github.com/nhannguyenhuu241/tooltip_claude/issues"
   },
-  "homepage": "https://github.com/NhanNH26/auto-doc-sync-mcp#readme",
+  "homepage": "https://github.com/nhannguyenhuu241/tooltip_claude/tree/main/mcp-servers/auto-doc-sync",
   "files": [
     "index.js",
     "templates/",
