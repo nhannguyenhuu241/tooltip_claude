@@ -154,6 +154,90 @@ class AutoDocSyncServer {
             required: ['project_path'],
           },
         },
+        // Multi-Dev Coordination Tools
+        {
+          name: 'check_conflicts',
+          description: 'Check for potential conflicts before editing a file. Detects: other Claude sessions editing same file, remote changes not pulled, local uncommitted changes.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              project_path: {
+                type: 'string',
+                description: 'Path to the project root',
+              },
+              file_path: {
+                type: 'string',
+                description: 'File path to check for conflicts',
+              },
+            },
+            required: ['project_path', 'file_path'],
+          },
+        },
+        {
+          name: 'list_sessions',
+          description: 'List all active Claude sessions working on this project. Shows developer, hostname, branch, and files being edited.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              project_path: {
+                type: 'string',
+                description: 'Path to the project root',
+              },
+              include_stale: {
+                type: 'boolean',
+                description: 'Include stale/inactive sessions',
+                default: false,
+              },
+            },
+            required: ['project_path'],
+          },
+        },
+        {
+          name: 'register_session',
+          description: 'Register current Claude session for multi-dev coordination. Required for WIP tracking and conflict detection.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              project_path: {
+                type: 'string',
+                description: 'Path to the project root',
+              },
+              working_on: {
+                type: 'string',
+                description: 'Brief description of what you are working on',
+              },
+            },
+            required: ['project_path'],
+          },
+        },
+        {
+          name: 'cleanup_sessions',
+          description: 'Clean up stale and abandoned Claude sessions. Removes sessions inactive for more than 30 minutes.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              project_path: {
+                type: 'string',
+                description: 'Path to the project root',
+              },
+            },
+            required: ['project_path'],
+          },
+        },
+        {
+          name: 'end_session',
+          description: 'End current Claude session and clean up WIP tracking.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              project_path: {
+                type: 'string',
+                description: 'Path to the project root',
+              },
+            },
+            required: ['project_path'],
+          },
+        },
       ],
     }));
 
@@ -172,6 +256,17 @@ class AutoDocSyncServer {
             return await this.handleDeduplicate(args);
           case 'run_hook':
             return await this.handleRunHook(args);
+          // Multi-Dev Coordination
+          case 'check_conflicts':
+            return await this.handleCheckConflicts(args);
+          case 'list_sessions':
+            return await this.handleListSessions(args);
+          case 'register_session':
+            return await this.handleRegisterSession(args);
+          case 'cleanup_sessions':
+            return await this.handleCleanupSessions(args);
+          case 'end_session':
+            return await this.handleEndSession(args);
           default:
             throw new Error(`Unknown tool: ${name}`);
         }
@@ -633,6 +728,70 @@ Be specific and actionable. Format in Vietnamese.`,
       writeFileSync(join(teamSyncDir, 'team-context-sync.js'), teamSyncContent, 'utf-8');
     }
 
+    // Copy Multi-Dev Coordination hooks
+    const coordHooksDir = join(project_path, '.claude/hooks/multi-dev-coord');
+    mkdirSync(coordHooksDir, { recursive: true });
+
+    // WIP Tracker (PostToolUse)
+    const wipTrackerTemplate = join(__dirname, 'templates/wip-tracker.js');
+    if (existsSync(wipTrackerTemplate)) {
+      writeFileSync(
+        join(coordHooksDir, 'wip-tracker.js'),
+        readFileSync(wipTrackerTemplate, 'utf-8'),
+        'utf-8'
+      );
+    }
+
+    // Conflict Checker (PreToolUse)
+    const conflictCheckerTemplate = join(__dirname, 'templates/conflict-checker.js');
+    if (existsSync(conflictCheckerTemplate)) {
+      writeFileSync(
+        join(coordHooksDir, 'conflict-checker.js'),
+        readFileSync(conflictCheckerTemplate, 'utf-8'),
+        'utf-8'
+      );
+    }
+
+    // Remote Sync Checker (PreToolUse)
+    const remoteSyncTemplate = join(__dirname, 'templates/remote-sync-checker.js');
+    if (existsSync(remoteSyncTemplate)) {
+      writeFileSync(
+        join(coordHooksDir, 'remote-sync-checker.js'),
+        readFileSync(remoteSyncTemplate, 'utf-8'),
+        'utf-8'
+      );
+    }
+
+    // Session Manager
+    const sessionManagerTemplate = join(__dirname, 'templates/session-manager.js');
+    if (existsSync(sessionManagerTemplate)) {
+      writeFileSync(
+        join(coordHooksDir, 'session-manager.js'),
+        readFileSync(sessionManagerTemplate, 'utf-8'),
+        'utf-8'
+      );
+    }
+
+    // Create WIP and sessions directories
+    mkdirSync(join(project_path, '.claude/wip'), { recursive: true });
+    mkdirSync(join(project_path, '.claude/sessions'), { recursive: true });
+
+    // Add to .gitignore
+    const gitignorePath = join(project_path, '.gitignore');
+    if (existsSync(gitignorePath)) {
+      let gitignore = readFileSync(gitignorePath, 'utf-8');
+      const additions = [];
+      if (!gitignore.includes('.claude/wip/')) additions.push('.claude/wip/');
+      if (!gitignore.includes('.claude/sessions/')) additions.push('.claude/sessions/');
+      if (!gitignore.includes('.claude/cache/')) additions.push('.claude/cache/');
+
+      if (additions.length > 0) {
+        gitignore += '\n# Claude multi-dev coordination (auto-generated)\n';
+        gitignore += additions.join('\n') + '\n';
+        writeFileSync(gitignorePath, gitignore, 'utf-8');
+      }
+    }
+
     // Install as git post-commit hook
     this.installGitHook(project_path, hookPath);
 
@@ -652,27 +811,69 @@ Be specific and actionable. Format in Vietnamese.`,
 - .claude/hooks/auto-doc-sync/deduplicate-changes.js
 - .claude/hooks/auto-doc-sync/deduplicate-module-docs.js
 - .claude/hooks/team-context-sync/team-context-sync.js
+- .claude/hooks/multi-dev-coord/wip-tracker.js
+- .claude/hooks/multi-dev-coord/conflict-checker.js
+- .claude/hooks/multi-dev-coord/remote-sync-checker.js
+- .claude/hooks/multi-dev-coord/session-manager.js
+- .claude/wip/ (directory)
+- .claude/sessions/ (directory)
 - .git/hooks/post-commit
 - CHANGES.md
 - docs/CONTEXT.md
 - docs/modules/ (directory)
 
 **Next Steps**:
-1. Add team-context-sync to your settings.json PreToolUse hooks:
+1. Add hooks to your settings.json:
    \`\`\`json
-   "PreToolUse": [{
-     "matcher": "Bash|Write|Edit",
-     "hooks": [{
-       "type": "command",
-       "command": "node \\"$CLAUDE_PROJECT_DIR\\"/.claude/hooks/team-context-sync/team-context-sync.js"
-     }]
-   }]
+   {
+     "hooks": {
+       "PreToolUse": [
+         {
+           "matcher": "Edit|Write",
+           "hooks": [{
+             "type": "command",
+             "command": "node \\"$CLAUDE_PROJECT_DIR\\"/.claude/hooks/multi-dev-coord/conflict-checker.js"
+           }]
+         },
+         {
+           "matcher": "Bash|Edit|Write",
+           "hooks": [{
+             "type": "command",
+             "command": "node \\"$CLAUDE_PROJECT_DIR\\"/.claude/hooks/multi-dev-coord/remote-sync-checker.js"
+           }]
+         },
+         {
+           "matcher": "Bash|Edit|Write",
+           "hooks": [{
+             "type": "command",
+             "command": "node \\"$CLAUDE_PROJECT_DIR\\"/.claude/hooks/team-context-sync/team-context-sync.js"
+           }]
+         }
+       ],
+       "PostToolUse": [
+         {
+           "matcher": "Edit|Write",
+           "hooks": [{
+             "type": "command",
+             "command": "node \\"$CLAUDE_PROJECT_DIR\\"/.claude/hooks/multi-dev-coord/wip-tracker.js"
+           }]
+         }
+       ]
+     }
+   }
    \`\`\`
-2. Make a commit to test the hook
-3. Run \`auto-doc-sync-mcp sync\` to view changes
-4. Configure custom modules with \`/modules\` command if needed
 
-The hooks will now automatically update documentation after every commit and inject team context into Claude sessions!`,
+2. Run \`register_session\` to start multi-dev tracking
+3. Make a commit to test the documentation hook
+4. Run \`list_sessions\` to see other active Claude sessions
+5. Configure custom modules with \`/modules\` command if needed
+
+**Multi-Dev Coordination Features**:
+- 🔴 Real-time WIP tracking (who's editing what)
+- 🛡️ Conflict detection before editing files
+- 📡 Proactive remote change detection
+- 👥 Multi-Claude session coordination
+- 🧹 Automatic stale session cleanup`,
         },
       ],
     };
@@ -822,6 +1023,432 @@ The hook will now use these rules to detect modules in commits.`,
         },
       ],
     };
+  }
+
+  // ========== Multi-Dev Coordination Tools ==========
+
+  async handleCheckConflicts(args) {
+    const { project_path, file_path } = args;
+
+    const wipDir = join(project_path, '.claude/wip');
+    const relativePath = file_path.replace(project_path, '').replace(/^[\/\\]/, '');
+    const conflicts = [];
+    let output = `# Conflict Check: ${relativePath}\n\n`;
+
+    // 1. Check WIP conflicts (other sessions)
+    if (existsSync(wipDir)) {
+      const sessionFiles = this.getFilesInDir(wipDir, '.json');
+      const staleThreshold = 30 * 60 * 1000; // 30 minutes
+      const now = Date.now();
+
+      for (const file of sessionFiles) {
+        try {
+          const data = JSON.parse(readFileSync(join(wipDir, file), 'utf-8'));
+          const lastActivity = new Date(data.lastActivity).getTime();
+
+          if (now - lastActivity > staleThreshold) continue;
+
+          if (data.files && data.files[relativePath]) {
+            conflicts.push({
+              type: 'wip',
+              developer: data.developer,
+              hostname: data.hostname,
+              lastAccess: data.files[relativePath].lastAccess,
+              accessCount: data.files[relativePath].accessCount
+            });
+          }
+        } catch {}
+      }
+    }
+
+    // 2. Check remote changes
+    let remoteChanges = null;
+    try {
+      execSync('git fetch --quiet', { cwd: project_path, stdio: 'ignore' });
+      const branch = execSync('git rev-parse --abbrev-ref HEAD', {
+        cwd: project_path, encoding: 'utf-8'
+      }).trim();
+
+      const diff = execSync(
+        `git diff HEAD..origin/${branch} -- "${relativePath}" 2>/dev/null`,
+        { cwd: project_path, encoding: 'utf-8' }
+      ).trim();
+
+      if (diff) {
+        remoteChanges = {
+          branch,
+          hasDiff: true,
+          diffPreview: diff.substring(0, 300)
+        };
+      }
+    } catch {}
+
+    // 3. Check local uncommitted changes
+    let localChanges = null;
+    try {
+      const status = execSync(
+        `git status --porcelain -- "${relativePath}"`,
+        { cwd: project_path, encoding: 'utf-8' }
+      ).trim();
+
+      if (status) {
+        localChanges = { status };
+      }
+    } catch {}
+
+    // Build report
+    if (conflicts.length > 0) {
+      output += `## 🔴 Active Conflicts\n\n`;
+      output += `Other Claude sessions are editing this file:\n\n`;
+      for (const c of conflicts) {
+        output += `- **${c.developer}@${c.hostname}**\n`;
+        output += `  - Last access: ${c.lastAccess}\n`;
+        output += `  - Edit count: ${c.accessCount}\n\n`;
+      }
+    }
+
+    if (remoteChanges) {
+      output += `## 🟡 Remote Changes\n\n`;
+      output += `File has changes on remote branch \`origin/${remoteChanges.branch}\` not yet pulled.\n\n`;
+      output += `\`\`\`diff\n${remoteChanges.diffPreview}...\n\`\`\`\n\n`;
+      output += `**Action**: Run \`git pull\` before editing.\n\n`;
+    }
+
+    if (localChanges) {
+      output += `## 🟠 Local Changes\n\n`;
+      output += `File has uncommitted local changes:\n`;
+      output += `\`\`\`\n${localChanges.status}\n\`\`\`\n\n`;
+    }
+
+    if (conflicts.length === 0 && !remoteChanges && !localChanges) {
+      output += `## ✅ No Conflicts Detected\n\n`;
+      output += `Safe to edit this file.\n`;
+    } else {
+      output += `---\n\n## Recommendations\n\n`;
+      if (conflicts.length > 0) {
+        output += `1. Coordinate with other developers before editing\n`;
+      }
+      if (remoteChanges) {
+        output += `2. Run \`git pull\` to get latest changes\n`;
+      }
+      if (localChanges) {
+        output += `3. Commit or stash local changes first\n`;
+      }
+    }
+
+    return {
+      content: [{ type: 'text', text: output }],
+    };
+  }
+
+  async handleListSessions(args) {
+    const { project_path, include_stale = false } = args;
+
+    const sessionsDir = join(project_path, '.claude/sessions');
+    const wipDir = join(project_path, '.claude/wip');
+
+    if (!existsSync(sessionsDir) && !existsSync(wipDir)) {
+      return {
+        content: [{
+          type: 'text',
+          text: `No sessions found. Run \`register_session\` to start tracking.`
+        }],
+      };
+    }
+
+    const sessions = [];
+    const staleThreshold = 30 * 60 * 1000;
+    const now = Date.now();
+
+    // Read from sessions dir
+    if (existsSync(sessionsDir)) {
+      const files = this.getFilesInDir(sessionsDir, '.json');
+      for (const file of files) {
+        try {
+          const data = JSON.parse(readFileSync(join(sessionsDir, file), 'utf-8'));
+          const lastActivity = new Date(data.lastHeartbeat || data.lastActivity).getTime();
+          const age = now - lastActivity;
+
+          const status = data.status === 'ended' ? 'ended'
+            : age > staleThreshold ? 'stale' : 'active';
+
+          if (!include_stale && status !== 'active') continue;
+
+          sessions.push({
+            ...data,
+            displayStatus: status,
+            ageMinutes: Math.floor(age / 60000)
+          });
+        } catch {}
+      }
+    }
+
+    // Also check WIP for sessions not in sessions dir
+    if (existsSync(wipDir)) {
+      const wipFiles = this.getFilesInDir(wipDir, '.json');
+      for (const file of wipFiles) {
+        try {
+          const data = JSON.parse(readFileSync(join(wipDir, file), 'utf-8'));
+          const lastActivity = new Date(data.lastActivity).getTime();
+          const age = now - lastActivity;
+
+          if (age > staleThreshold && !include_stale) continue;
+
+          // Check if already in sessions
+          const exists = sessions.find(s => s.sessionId === data.sessionId);
+          if (!exists) {
+            sessions.push({
+              ...data,
+              displayStatus: age > staleThreshold ? 'stale' : 'active',
+              ageMinutes: Math.floor(age / 60000)
+            });
+          }
+        } catch {}
+      }
+    }
+
+    // Build output
+    let output = `# Active Claude Sessions\n\n`;
+    output += `Found ${sessions.length} session(s)\n\n`;
+
+    const statusIcons = { active: '🟢', stale: '🟡', ended: '⚫' };
+
+    for (const s of sessions) {
+      output += `## ${statusIcons[s.displayStatus]} ${s.developer}@${s.hostname}\n\n`;
+      output += `- **Session ID**: \`${s.sessionId}\`\n`;
+      output += `- **Status**: ${s.displayStatus}\n`;
+      output += `- **Branch**: ${s.branch || 'unknown'}\n`;
+      output += `- **Started**: ${s.started}\n`;
+      output += `- **Last Activity**: ${s.ageMinutes} minutes ago\n`;
+
+      const fileCount = Object.keys(s.files || {}).length;
+      if (fileCount > 0) {
+        output += `- **Files being edited**: ${fileCount}\n`;
+        const files = Object.keys(s.files).slice(0, 5);
+        for (const f of files) {
+          output += `  - ${f}\n`;
+        }
+        if (fileCount > 5) {
+          output += `  - ... and ${fileCount - 5} more\n`;
+        }
+      }
+      output += '\n';
+    }
+
+    if (sessions.length === 0) {
+      output += `No active sessions found.\n`;
+    }
+
+    return {
+      content: [{ type: 'text', text: output }],
+    };
+  }
+
+  async handleRegisterSession(args) {
+    const { project_path, working_on } = args;
+
+    const sessionsDir = join(project_path, '.claude/sessions');
+    const wipDir = join(project_path, '.claude/wip');
+
+    mkdirSync(sessionsDir, { recursive: true });
+    mkdirSync(wipDir, { recursive: true });
+
+    // Generate session ID
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    const developer = process.env.USER || process.env.USERNAME || 'claude';
+    const sessionId = `${developer}-${timestamp}-${random}`;
+
+    // Get current branch
+    let branch = 'unknown';
+    try {
+      branch = execSync('git rev-parse --abbrev-ref HEAD', {
+        cwd: project_path, encoding: 'utf-8'
+      }).trim();
+    } catch {}
+
+    const sessionData = {
+      sessionId,
+      developer,
+      hostname: require('os').hostname(),
+      platform: process.platform,
+      started: new Date().toISOString(),
+      lastHeartbeat: new Date().toISOString(),
+      status: 'active',
+      workingOn: working_on || null,
+      branch,
+      files: {},
+      stats: { toolCalls: 0, edits: 0, writes: 0, reads: 0 }
+    };
+
+    // Save to sessions dir
+    writeFileSync(
+      join(sessionsDir, `${sessionId}.json`),
+      JSON.stringify(sessionData, null, 2),
+      'utf-8'
+    );
+
+    // Save to WIP dir
+    writeFileSync(
+      join(wipDir, `${sessionId}.json`),
+      JSON.stringify({
+        sessionId,
+        developer,
+        hostname: sessionData.hostname,
+        started: sessionData.started,
+        lastActivity: sessionData.lastHeartbeat,
+        files: {},
+        stats: sessionData.stats
+      }, null, 2),
+      'utf-8'
+    );
+
+    return {
+      content: [{
+        type: 'text',
+        text: `✅ Session registered successfully!
+
+**Session ID**: \`${sessionId}\`
+**Developer**: ${developer}
+**Branch**: ${branch}
+**Working On**: ${working_on || 'Not specified'}
+
+Your session is now tracked. Other Claude instances will see your activity.
+
+**Next steps**:
+1. Add conflict-checker hook to settings.json for automatic conflict detection
+2. Run \`list_sessions\` to see other active sessions
+3. Run \`end_session\` when done`
+      }],
+    };
+  }
+
+  async handleCleanupSessions(args) {
+    const { project_path } = args;
+
+    const sessionsDir = join(project_path, '.claude/sessions');
+    const wipDir = join(project_path, '.claude/wip');
+
+    let cleaned = { sessions: 0, wip: 0 };
+    const staleThreshold = 30 * 60 * 1000;
+    const now = Date.now();
+
+    // Clean sessions
+    if (existsSync(sessionsDir)) {
+      const files = this.getFilesInDir(sessionsDir, '.json');
+      for (const file of files) {
+        try {
+          const filePath = join(sessionsDir, file);
+          const data = JSON.parse(readFileSync(filePath, 'utf-8'));
+          const lastActivity = new Date(data.lastHeartbeat || data.started).getTime();
+
+          if (now - lastActivity > staleThreshold || data.status === 'ended') {
+            require('fs').unlinkSync(filePath);
+            cleaned.sessions++;
+          }
+        } catch {
+          try {
+            require('fs').unlinkSync(join(sessionsDir, file));
+            cleaned.sessions++;
+          } catch {}
+        }
+      }
+    }
+
+    // Clean WIP
+    if (existsSync(wipDir)) {
+      const files = this.getFilesInDir(wipDir, '.json');
+      for (const file of files) {
+        try {
+          const filePath = join(wipDir, file);
+          const data = JSON.parse(readFileSync(filePath, 'utf-8'));
+          const lastActivity = new Date(data.lastActivity || data.started).getTime();
+
+          if (now - lastActivity > staleThreshold) {
+            require('fs').unlinkSync(filePath);
+            cleaned.wip++;
+          }
+        } catch {
+          try {
+            require('fs').unlinkSync(join(wipDir, file));
+            cleaned.wip++;
+          } catch {}
+        }
+      }
+    }
+
+    return {
+      content: [{
+        type: 'text',
+        text: `🧹 Cleanup complete!
+
+**Sessions removed**: ${cleaned.sessions}
+**WIP entries removed**: ${cleaned.wip}
+
+Stale sessions (inactive > 30 minutes) have been cleaned up.`
+      }],
+    };
+  }
+
+  async handleEndSession(args) {
+    const { project_path } = args;
+
+    // Find current session (most recent one from this process)
+    const sessionsDir = join(project_path, '.claude/sessions');
+    const wipDir = join(project_path, '.claude/wip');
+
+    let endedCount = 0;
+
+    // For now, we'll end all sessions from this developer
+    const developer = process.env.USER || process.env.USERNAME || 'claude';
+
+    if (existsSync(sessionsDir)) {
+      const files = this.getFilesInDir(sessionsDir, '.json');
+      for (const file of files) {
+        if (file.startsWith(developer)) {
+          try {
+            const filePath = join(sessionsDir, file);
+            const data = JSON.parse(readFileSync(filePath, 'utf-8'));
+            data.status = 'ended';
+            data.endedAt = new Date().toISOString();
+            writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+            endedCount++;
+          } catch {}
+        }
+      }
+    }
+
+    // Remove from WIP
+    if (existsSync(wipDir)) {
+      const files = this.getFilesInDir(wipDir, '.json');
+      for (const file of files) {
+        if (file.startsWith(developer)) {
+          try {
+            require('fs').unlinkSync(join(wipDir, file));
+          } catch {}
+        }
+      }
+    }
+
+    return {
+      content: [{
+        type: 'text',
+        text: `✅ Session(s) ended!
+
+**Sessions ended**: ${endedCount}
+**Developer**: ${developer}
+
+Your WIP tracking has been cleared. Other sessions will no longer see your activity.`
+      }],
+    };
+  }
+
+  getFilesInDir(dir, extension) {
+    try {
+      return require('fs').readdirSync(dir).filter(f => f.endsWith(extension));
+    } catch {
+      return [];
+    }
   }
 
   // Helper Methods

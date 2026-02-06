@@ -117,3 +117,8 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+
+# Claude multi-dev coordination (auto-generated, local only)
+.claude/wip/
+.claude/sessions/
+.claude/cache/

@@ -140,6 +140,52 @@ class DBContextSyncServer {
                 required: ['sql_file', 'connection_string', 'db_type'],
               },
             },
+            {
+              name: 'install_db_hooks',
+              description: 'Install database context hooks into a project for automatic context injection and migration tracking',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  project_path: {
+                    type: 'string',
+                    description: 'Project root path',
+                  },
+                },
+                required: ['project_path'],
+              },
+            },
+            {
+              name: 'get_migration_history',
+              description: 'Get migration history and recent schema changes',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  project_path: {
+                    type: 'string',
+                    description: 'Project root path',
+                  },
+                  limit: {
+                    type: 'number',
+                    description: 'Number of recent migrations to return (default: 10)',
+                  },
+                },
+                required: ['project_path'],
+              },
+            },
+            {
+              name: 'check_schema_changes',
+              description: 'Check if database schema has changed since last sync',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  project_path: {
+                    type: 'string',
+                    description: 'Project root path',
+                  },
+                },
+                required: ['project_path'],
+              },
+            },
           ],
         };
       }
@@ -161,6 +207,12 @@ class DBContextSyncServer {
             return await this.handleGenerateSQL(args);
           case 'create_database':
             return await this.handleCreateDatabase(args);
+          case 'install_db_hooks':
+            return await this.handleInstallDbHooks(args);
+          case 'get_migration_history':
+            return await this.handleGetMigrationHistory(args);
+          case 'check_schema_changes':
+            return await this.handleCheckSchemaChanges(args);
           default:
             throw new Error(`Unknown tool: ${name}`);
         }
@@ -1044,6 +1096,349 @@ class DBContextSyncServer {
         },
       ],
     };
+  }
+
+  /**
+   * Install database context hooks into a project
+   */
+  async handleInstallDbHooks(args) {
+    const { project_path } = args;
+
+    try {
+      const hooksDir = join(project_path, '.claude/hooks/db-context-sync');
+      const settingsPath = join(project_path, '.claude/settings.json');
+      const templatesDir = join(__dirname, 'templates');
+
+      // Create hooks directory
+      if (!existsSync(hooksDir)) {
+        mkdirSync(hooksDir, { recursive: true });
+      }
+
+      // Copy hook templates
+      const hooks = ['db-schema-watcher.js', 'db-context-inject.js'];
+      const copiedHooks = [];
+
+      for (const hook of hooks) {
+        const sourcePath = join(templatesDir, hook);
+        const destPath = join(hooksDir, hook);
+
+        if (existsSync(sourcePath)) {
+          const content = readFileSync(sourcePath, 'utf-8');
+          writeFileSync(destPath, content, 'utf-8');
+          copiedHooks.push(hook);
+        }
+      }
+
+      // Update or create settings.json
+      let settings = {};
+      if (existsSync(settingsPath)) {
+        try {
+          settings = JSON.parse(readFileSync(settingsPath, 'utf-8'));
+        } catch {
+          settings = {};
+        }
+      }
+
+      // Ensure hooks structure exists
+      if (!settings.hooks) {
+        settings.hooks = {};
+      }
+      if (!settings.hooks.PreToolUse) {
+        settings.hooks.PreToolUse = [];
+      }
+      if (!settings.hooks.PostToolUse) {
+        settings.hooks.PostToolUse = [];
+      }
+
+      // Add PreToolUse hook for context injection
+      const preHookConfig = {
+        matcher: 'Bash|Edit|Write',
+        hooks: [{
+          type: 'command',
+          command: `node "$CLAUDE_PROJECT_DIR"/.claude/hooks/db-context-sync/db-context-inject.js`
+        }]
+      };
+
+      // Add PostToolUse hook for schema watching
+      const postHookConfig = {
+        matcher: 'Bash|Edit|Write',
+        hooks: [{
+          type: 'command',
+          command: `node "$CLAUDE_PROJECT_DIR"/.claude/hooks/db-context-sync/db-schema-watcher.js`
+        }]
+      };
+
+      // Check if hooks already exist
+      const preHookExists = settings.hooks.PreToolUse.some(h =>
+        h.hooks?.some(hh => hh.command?.includes('db-context-inject'))
+      );
+      const postHookExists = settings.hooks.PostToolUse.some(h =>
+        h.hooks?.some(hh => hh.command?.includes('db-schema-watcher'))
+      );
+
+      if (!preHookExists) {
+        settings.hooks.PreToolUse.push(preHookConfig);
+      }
+      if (!postHookExists) {
+        settings.hooks.PostToolUse.push(postHookConfig);
+      }
+
+      // Ensure .claude directory structure
+      const claudeDir = join(project_path, '.claude');
+      if (!existsSync(claudeDir)) {
+        mkdirSync(claudeDir, { recursive: true });
+      }
+
+      // Write settings
+      writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
+
+      // Create cache directory
+      const cacheDir = join(project_path, '.claude/cache');
+      if (!existsSync(cacheDir)) {
+        mkdirSync(cacheDir, { recursive: true });
+      }
+
+      // Update .gitignore
+      const gitignorePath = join(project_path, '.gitignore');
+      if (existsSync(gitignorePath)) {
+        let gitignore = readFileSync(gitignorePath, 'utf-8');
+        const additions = [];
+
+        if (!gitignore.includes('.claude/cache/')) {
+          additions.push('.claude/cache/');
+        }
+
+        if (additions.length > 0) {
+          gitignore += '\n# Claude DB Context Sync (auto-generated)\n';
+          gitignore += additions.join('\n') + '\n';
+          writeFileSync(gitignorePath, gitignore, 'utf-8');
+        }
+      }
+
+      return {
+        content: [{
+          type: 'text',
+          text: `✅ Database context hooks installed successfully!\n\n` +
+                `📁 Hooks directory: ${hooksDir}\n` +
+                `📄 Hooks installed: ${copiedHooks.join(', ')}\n` +
+                `⚙️  Settings updated: ${settingsPath}\n\n` +
+                `## Installed Hooks:\n\n` +
+                `### 1. db-context-inject.js (PreToolUse)\n` +
+                `- Triggers when: Working with DB files, Prisma code, migrations\n` +
+                `- Action: Auto-injects database schema context into Claude's awareness\n` +
+                `- Cache: 10 minutes (prevents context spam)\n\n` +
+                `### 2. db-schema-watcher.js (PostToolUse)\n` +
+                `- Triggers when: Running migration commands, editing schema files\n` +
+                `- Action: Auto-updates docs/database-context.md\n` +
+                `- Detects: Prisma, Sequelize, TypeORM, Knex, Alembic, Rails, Diesel\n\n` +
+                `## Next Steps:\n` +
+                `1. Run \`scan_database\` to generate initial schema docs\n` +
+                `2. Hooks will automatically maintain context after migrations\n` +
+                `3. Claude will always have up-to-date DB context when working with database code`
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `❌ Error installing hooks: ${error.message}`
+        }],
+        isError: true
+      };
+    }
+  }
+
+  /**
+   * Get migration history
+   */
+  async handleGetMigrationHistory(args) {
+    const { project_path, limit = 10 } = args;
+
+    try {
+      const migrationsDir = join(project_path, 'prisma/migrations');
+
+      if (!existsSync(migrationsDir)) {
+        return {
+          content: [{
+            type: 'text',
+            text: `📝 No migrations directory found at: ${migrationsDir}\n\n` +
+                  `This project may not use Prisma or hasn't run any migrations yet.\n` +
+                  `Run \`prisma migrate dev\` to create your first migration.`
+          }]
+        };
+      }
+
+      // Get all migration directories
+      const { readdirSync, statSync } = await import('fs');
+      const migrations = readdirSync(migrationsDir)
+        .filter(f => statSync(join(migrationsDir, f)).isDirectory())
+        .sort()
+        .reverse()
+        .slice(0, limit);
+
+      if (migrations.length === 0) {
+        return {
+          content: [{
+            type: 'text',
+            text: `📝 No migrations found in: ${migrationsDir}`
+          }]
+        };
+      }
+
+      let output = `📊 Migration History (last ${Math.min(limit, migrations.length)})\n\n`;
+
+      for (const migration of migrations) {
+        const migrationDir = join(migrationsDir, migration);
+        const sqlPath = join(migrationDir, 'migration.sql');
+
+        // Parse migration name
+        const [timestamp, ...nameParts] = migration.split('_');
+        const name = nameParts.join('_') || '(unnamed)';
+
+        output += `### ${migration}\n`;
+        output += `- **Name**: ${name}\n`;
+        output += `- **Date**: ${timestamp}\n`;
+
+        if (existsSync(sqlPath)) {
+          const sql = readFileSync(sqlPath, 'utf-8');
+          const lines = sql.split('\n').filter(l => l.trim() && !l.trim().startsWith('--'));
+
+          // Extract key operations
+          const operations = [];
+          if (sql.includes('CREATE TABLE')) operations.push('CREATE TABLE');
+          if (sql.includes('ALTER TABLE')) operations.push('ALTER TABLE');
+          if (sql.includes('DROP TABLE')) operations.push('DROP TABLE');
+          if (sql.includes('CREATE INDEX')) operations.push('CREATE INDEX');
+          if (sql.includes('ADD COLUMN')) operations.push('ADD COLUMN');
+          if (sql.includes('DROP COLUMN')) operations.push('DROP COLUMN');
+
+          output += `- **Operations**: ${operations.join(', ') || 'N/A'}\n`;
+          output += `- **SQL Lines**: ${lines.length}\n`;
+
+          // Show preview
+          const preview = sql.slice(0, 300);
+          output += `\n\`\`\`sql\n${preview}${sql.length > 300 ? '\n...' : ''}\n\`\`\`\n`;
+        } else {
+          output += `- **SQL**: Not found\n`;
+        }
+
+        output += '\n';
+      }
+
+      return {
+        content: [{
+          type: 'text',
+          text: output
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `❌ Error getting migration history: ${error.message}`
+        }],
+        isError: true
+      };
+    }
+  }
+
+  /**
+   * Check if schema has changed since last sync
+   */
+  async handleCheckSchemaChanges(args) {
+    const { project_path } = args;
+
+    try {
+      const schemaPath = join(project_path, 'prisma/schema.prisma');
+      const cacheFile = join(project_path, '.claude/cache/schema-hash.json');
+
+      if (!existsSync(schemaPath)) {
+        return {
+          content: [{
+            type: 'text',
+            text: `📝 No Prisma schema found at: ${schemaPath}`
+          }]
+        };
+      }
+
+      // Calculate current hash
+      const { createHash } = await import('crypto');
+      const schemaContent = readFileSync(schemaPath, 'utf-8');
+      const currentHash = createHash('md5').update(schemaContent).digest('hex');
+
+      // Get last known hash
+      let lastHash = null;
+      let lastUpdate = null;
+
+      if (existsSync(cacheFile)) {
+        try {
+          const cache = JSON.parse(readFileSync(cacheFile, 'utf-8'));
+          lastHash = cache.hash;
+          lastUpdate = cache.timestamp;
+        } catch {
+          // Ignore cache errors
+        }
+      }
+
+      const hasChanged = lastHash !== currentHash;
+
+      // Parse current schema for summary
+      const schema = await this.scanPrismaSchema(project_path);
+
+      let output = `📊 Schema Status\n\n`;
+      output += `- **Current Hash**: \`${currentHash.slice(0, 8)}...\`\n`;
+      output += `- **Last Known Hash**: \`${lastHash ? lastHash.slice(0, 8) + '...' : 'N/A'}\`\n`;
+      output += `- **Last Update**: ${lastUpdate || 'Never'}\n`;
+      output += `- **Status**: ${hasChanged ? '🟡 CHANGED' : '🟢 UP TO DATE'}\n\n`;
+
+      output += `## Current Schema Summary\n\n`;
+      output += `- **Models**: ${schema.tables.length}\n`;
+      output += `- **Relationships**: ${schema.relationships.length}\n\n`;
+
+      if (schema.tables.length > 0) {
+        output += `### Models:\n`;
+        for (const table of schema.tables) {
+          const pkFields = table.fields.filter(f => f.isPrimaryKey).map(f => f.name);
+          const fkFields = table.fields.filter(f => f.isForeignKey).map(f => f.name);
+          output += `- **${table.name}**: ${table.fields.length} fields`;
+          if (pkFields.length) output += ` (PK: ${pkFields.join(', ')})`;
+          if (fkFields.length) output += ` (FK: ${fkFields.join(', ')})`;
+          output += '\n';
+        }
+      }
+
+      if (hasChanged) {
+        output += `\n## Recommended Actions\n\n`;
+        output += `1. Run \`scan_database\` to regenerate schema documentation\n`;
+        output += `2. Review changes in \`prisma/schema.prisma\`\n`;
+        output += `3. If schema is finalized, run \`prisma migrate dev\`\n`;
+      }
+
+      // Update cache with current hash
+      const cacheDir = join(project_path, '.claude/cache');
+      if (!existsSync(cacheDir)) {
+        mkdirSync(cacheDir, { recursive: true });
+      }
+      writeFileSync(cacheFile, JSON.stringify({
+        hash: currentHash,
+        timestamp: new Date().toISOString()
+      }, null, 2), 'utf-8');
+
+      return {
+        content: [{
+          type: 'text',
+          text: output
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `❌ Error checking schema changes: ${error.message}`
+        }],
+        isError: true
+      };
+    }
   }
 
   setupErrorHandling() {

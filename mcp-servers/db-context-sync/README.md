@@ -10,8 +10,11 @@
 - ✅ **Auto-update** - Cập nhật khi database thay đổi
 - ✅ **AI Prompts** - Database analysis, migration planning, query optimization
 - ✅ **Version tracking** - So sánh schema changes
-- ✨ **NEW: Prisma to SQL** - Convert Prisma schema thành SQL database (MySQL, PostgreSQL, SQLite)
-- ✨ **NEW: Create Database** - Execute SQL để tạo database tự động
+- ✅ **Prisma to SQL** - Convert Prisma schema thành SQL database (MySQL, PostgreSQL, SQLite)
+- ✅ **Create Database** - Execute SQL để tạo database tự động
+- ✨ **NEW: Auto Context Injection** - Tự động inject DB context khi Claude làm việc với database code
+- ✨ **NEW: Schema Watcher** - Tự động cập nhật docs sau migrations
+- ✨ **NEW: Migration History** - Xem lịch sử migrations
 
 ## 📦 Cài Đặt
 
@@ -130,7 +133,7 @@ User: Create SQLite schema
 
 **Output:** SQL file (`schema-mysql.sql`, `schema-postgresql.sql`, etc.)
 
-### 5. `create_database` ✨ NEW
+### 5. `create_database`
 
 Execute SQL script để tạo database
 
@@ -143,6 +146,109 @@ User: Execute PostgreSQL schema
 - `sql_file` (required): Path to SQL file
 - `connection_string` (required): Database connection string
 - `db_type` (required): 'mysql' | 'postgresql' | 'sqlite'
+
+### 6. `install_db_hooks` ✨ NEW
+
+Cài đặt hooks tự động vào project
+
+```
+User: Install database hooks for this project
+User: Setup automatic DB context injection
+```
+
+**Parameters:**
+- `project_path` (required): Project root path
+
+**Cài đặt:**
+- `db-context-inject.js` - PreToolUse hook
+- `db-schema-watcher.js` - PostToolUse hook
+- Cập nhật `.claude/settings.json`
+
+### 7. `get_migration_history` ✨ NEW
+
+Xem lịch sử migrations
+
+```
+User: Show migration history
+User: List recent database migrations
+```
+
+**Parameters:**
+- `project_path` (required): Project root path
+- `limit` (optional): Số lượng migrations (default: 10)
+
+### 8. `check_schema_changes` ✨ NEW
+
+Kiểm tra schema có thay đổi
+
+```
+User: Check if database schema changed
+User: Compare current schema with last sync
+```
+
+**Parameters:**
+- `project_path` (required): Project root path
+
+## 🔄 Auto Hooks System ✨ NEW
+
+### Overview
+
+DB Context Sync bao gồm hệ thống hooks tự động:
+
+| Hook | Type | Trigger | Action |
+|------|------|---------|--------|
+| `db-context-inject.js` | PreToolUse | DB code editing | Inject schema context |
+| `db-schema-watcher.js` | PostToolUse | Migrations run | Update docs |
+
+### Cài Đặt Hooks
+
+```
+User: Install database hooks for this project
+```
+
+Hoặc manual:
+```bash
+# Copy hooks
+mkdir -p .claude/hooks/db-context-sync
+cp templates/*.js .claude/hooks/db-context-sync/
+
+# Update settings.json
+# See DB_HOOKS_GUIDE.md for details
+```
+
+### db-context-inject.js
+
+**Kích hoạt khi:**
+- Edit file: `*.repository.ts`, `*.entity.ts`, `schema.prisma`
+- Edit trong: `prisma/`, `migrations/`, `models/`
+- Code chứa: `findMany`, `@relation`, `repository`, etc.
+
+**Output:**
+```
+📊 [DB-CONTEXT-INJECT] Database Context (auto-injected)
+   Reason: DB file: user.repository.ts
+
+## Models (5)
+### User
+id: Int [PK], email: String [UNIQUE], name: String?, ...
+```
+
+### db-schema-watcher.js
+
+**Kích hoạt khi:**
+- Chạy: `prisma migrate dev`, `sequelize db:migrate`, etc.
+- Edit: `schema.prisma`, `*.migration.sql`
+
+**Output:**
+```
+📊 [DB-SCHEMA-WATCHER] Database context updated!
+   Trigger: Migration command: prisma migrate dev
+   Models: 5
+   Migrations: 12
+   Updated: docs/database-context.md
+```
+
+📖 **Chi tiết:** Xem [DB_HOOKS_GUIDE.md](DB_HOOKS_GUIDE.md)
 
 ## 📚 MCP Resources Available
 

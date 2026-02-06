@@ -4,14 +4,23 @@
 
 ## 🎯 Tính Năng
 
+### Documentation Sync
 - ✅ **Tự động cập nhật CHANGES.md** sau mỗi commit
 - ✅ **Tạo AI Context** (CONTEXT.md) với phân loại thay đổi
 - ✅ **Module docs** chi tiết cho từng module
 - ✅ **Deduplication** - Không bị trùng lặp
 - ✅ **Dependency warnings** - Cảnh báo khi cần install packages
-- ✅ **Team sync** - Xem ai đang làm gì, module nào hot
 - ✅ **Multi-language** - Hỗ trợ Flutter, Node.js, Python, Ruby, Go
 - ✨ **AI Prompts** - Auto-generate prompts theo tech stack (BE/FE/Mobile)
+
+### 🆕 Multi-Dev Coordination (NEW!)
+- 🔴 **Real-time WIP Tracking** - Biết ai đang edit file nào
+- 🛡️ **Conflict Detection** - Check conflict TRƯỚC khi edit
+- 📡 **Remote Sync Checker** - Phát hiện thay đổi từ remote chưa pull
+- 👥 **Session Management** - Quản lý Claude sessions đang active
+- 🧹 **Auto Cleanup** - Tự động dọn sessions cũ
+
+📖 **Chi tiết**: Xem [MULTI_DEV_COORDINATION.md](MULTI_DEV_COORDINATION.md)
 
 ## 📦 Cài Đặt
 
@@ -138,6 +147,58 @@ Chạy hook manually (không cần commit)
 
 ```
 User: Run auto-doc-sync hook manually
+```
+
+### 6. `check_conflicts` 🆕
+Kiểm tra conflict trước khi edit file
+
+```
+User: Check conflicts cho file lib/auth/login.dart
+```
+
+**Parameters:**
+- `project_path` (required): Project root path
+- `file_path` (required): File cần check
+
+**Checks:**
+- WIP conflicts (Claude sessions khác đang edit)
+- Remote changes (file thay đổi trên remote chưa pull)
+- Local uncommitted changes
+
+### 7. `list_sessions` 🆕
+Xem tất cả Claude sessions đang active
+
+```
+User: List active Claude sessions
+```
+
+**Parameters:**
+- `project_path` (required)
+- `include_stale` (optional): Include sessions inactive >30 phút
+
+### 8. `register_session` 🆕
+Đăng ký session hiện tại để tracking
+
+```
+User: Register session với description "Implementing auth feature"
+```
+
+**Parameters:**
+- `project_path` (required)
+- `working_on` (optional): Mô tả công việc đang làm
+
+### 9. `cleanup_sessions` 🆕
+Dọn dẹp sessions cũ/stale
+
+```
+User: Cleanup stale sessions
+```
+
+### 10. `end_session` 🆕
+Kết thúc session hiện tại
+
+```
+User: End my Claude session
 ```
 
 ## 📚 MCP Resources Available

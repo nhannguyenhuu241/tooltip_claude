@@ -1,0 +1,357 @@
+#!/usr/bin/env node
+
+/**
+ * Conflict Checker - PreToolUse Hook
+ *
+ * Checks for potential conflicts BEFORE editing files:
+ * 1. Other Claude sessions working on same file (WIP tracking)
+ * 2. Remote changes not yet pulled (git)
+ * 3. Local uncommitted changes that might conflict
+ *
+ * Usage: PreToolUse hook for Edit|Write tools
+ *
+ * Exit Codes:
+ *   0 - Allow operation (no conflicts or user acknowledged)
+ *   2 - Block operation (critical conflict detected)
+ *
+ * Environment Variables:
+ *   CONFLICT_CHECK_MODE: 'warn' (default) | 'block' | 'skip'
+ *   CLAUDE_SESSION_ID: Current session identifier
+ */
+
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+const os = require('os');
+const crypto = require('crypto');
+
+const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+const wipDir = path.join(projectDir, '.claude/wip');
+const conflictMode = process.env.CONFLICT_CHECK_MODE || 'warn';
+
+// Session identification
+const sessionId = process.env.CLAUDE_SESSION_ID || `${os.userInfo().username || 'unknown'}-${Date.now().toString(36)}`;
+const developer = process.env.USER || process.env.USERNAME || os.userInfo().username || 'unknown';
+
+/**
+ * Execute git command safely
+ */
+function git(command) {
+  try {
+    return execSync(`git ${command}`, {
+      cwd: projectDir,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe']
+    }).trim();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if file has remote changes not yet pulled
+ */
+function checkRemoteChanges(filePath) {
+  const relativePath = path.relative(projectDir, filePath);
+
+  // Fetch latest (non-blocking, silent)
+  git('fetch --quiet 2>/dev/null');
+
+  // Check if file differs from remote
+  const currentBranch = git('rev-parse --abbrev-ref HEAD');
+  if (!currentBranch) return null;
+
+  const remoteBranch = `origin/${currentBranch}`;
+
+  // Check if remote branch exists
+  const remoteExists = git(`rev-parse --verify ${remoteBranch} 2>/dev/null`);
+  if (!remoteExists) return null;
+
+  // Get diff for this specific file
+  const diff = git(`diff HEAD..${remoteBranch} -- "${relativePath}" 2>/dev/null`);
+
+  if (diff && diff.length > 0) {
+    // Get commit info for remote changes
+    const remoteLog = git(`log HEAD..${remoteBranch} --oneline -- "${relativePath}" 2>/dev/null`);
+    return {
+      hasChanges: true,
+      diff: diff.substring(0, 500), // Truncate
+      commits: remoteLog ? remoteLog.split('\n').slice(0, 5) : []
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Check if file has local uncommitted changes
+ */
+function checkLocalChanges(filePath) {
+  const relativePath = path.relative(projectDir, filePath);
+
+  // Check for staged changes
+  const staged = git(`diff --cached --name-only -- "${relativePath}"`);
+
+  // Check for unstaged changes
+  const unstaged = git(`diff --name-only -- "${relativePath}"`);
+
+  if (staged || unstaged) {
+    return {
+      staged: !!staged,
+      unstaged: !!unstaged,
+      status: git(`status --porcelain -- "${relativePath}"`)
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Check WIP registry for other sessions editing same file
+ */
+function checkWipConflicts(filePath) {
+  if (!fs.existsSync(wipDir)) return [];
+
+  const relativePath = path.relative(projectDir, filePath);
+  const conflicts = [];
+  const staleThreshold = 30 * 60 * 1000; // 30 minutes
+  const now = Date.now();
+
+  const files = fs.readdirSync(wipDir).filter(f => f.endsWith('.json'));
+
+  for (const file of files) {
+    // Skip current session
+    if (file.startsWith(sessionId)) continue;
+
+    try {
+      const sessionPath = path.join(wipDir, file);
+      const data = JSON.parse(fs.readFileSync(sessionPath, 'utf-8'));
+      const lastActivity = new Date(data.lastActivity).getTime();
+
+      // Skip stale sessions (inactive > 30 min)
+      if (now - lastActivity > staleThreshold) continue;
+
+      // Check if this session is working on our file
+      if (data.files && data.files[relativePath]) {
+        const fileInfo = data.files[relativePath];
+        conflicts.push({
+          developer: data.developer,
+          hostname: data.hostname,
+          sessionId: data.sessionId,
+          lastAccess: fileInfo.lastAccess,
+          accessCount: fileInfo.accessCount,
+          sessionStart: data.started
+        });
+      }
+    } catch {
+      // Ignore corrupted files
+    }
+  }
+
+  return conflicts;
+}
+
+/**
+ * Check all modules being worked on by other sessions
+ */
+function getActiveModules() {
+  if (!fs.existsSync(wipDir)) return {};
+
+  const modules = {};
+  const staleThreshold = 30 * 60 * 1000;
+  const now = Date.now();
+
+  const files = fs.readdirSync(wipDir).filter(f => f.endsWith('.json'));
+
+  for (const file of files) {
+    if (file.startsWith(sessionId)) continue;
+
+    try {
+      const sessionPath = path.join(wipDir, file);
+      const data = JSON.parse(fs.readFileSync(sessionPath, 'utf-8'));
+      const lastActivity = new Date(data.lastActivity).getTime();
+
+      if (now - lastActivity > staleThreshold) continue;
+
+      // Extract modules from file paths
+      for (const filePath of Object.keys(data.files || {})) {
+        const parts = filePath.split('/');
+        let moduleName = 'root';
+
+        if (parts[0] === 'lib' || parts[0] === 'src') {
+          moduleName = parts[1] || parts[0];
+        } else if (parts[0] === 'packages') {
+          moduleName = parts[1] || 'packages';
+        }
+
+        if (!modules[moduleName]) {
+          modules[moduleName] = [];
+        }
+
+        modules[moduleName].push({
+          developer: data.developer,
+          file: filePath
+        });
+      }
+    } catch {
+      // Ignore
+    }
+  }
+
+  return modules;
+}
+
+/**
+ * Format time ago
+ */
+function timeAgo(dateStr) {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ${minutes % 60}m ago`;
+}
+
+/**
+ * Build conflict report
+ */
+function buildConflictReport(filePath, wipConflicts, remoteChanges, localChanges) {
+  const issues = [];
+  let severity = 'info'; // info, warning, critical
+
+  // WIP conflicts (other sessions)
+  if (wipConflicts.length > 0) {
+    severity = 'warning';
+    let msg = `\n🔴 **ACTIVE CONFLICT**: Other Claude sessions editing this file!\n`;
+    for (const c of wipConflicts) {
+      msg += `   • ${c.developer}@${c.hostname} — ${c.accessCount} edits, last ${timeAgo(c.lastAccess)}\n`;
+    }
+    msg += `   → Coordinate before proceeding or risk merge conflicts\n`;
+    issues.push(msg);
+  }
+
+  // Remote changes
+  if (remoteChanges) {
+    severity = severity === 'warning' ? 'critical' : 'warning';
+    let msg = `\n🟡 **REMOTE CHANGES**: File modified on remote, not yet pulled!\n`;
+    if (remoteChanges.commits.length > 0) {
+      msg += `   Recent commits:\n`;
+      for (const commit of remoteChanges.commits.slice(0, 3)) {
+        msg += `   • ${commit}\n`;
+      }
+    }
+    msg += `   → Run 'git pull' before editing to avoid conflicts\n`;
+    issues.push(msg);
+  }
+
+  // Local uncommitted changes
+  if (localChanges) {
+    let msg = `\n🟠 **LOCAL CHANGES**: Uncommitted changes in this file\n`;
+    msg += `   Status: ${localChanges.status || 'modified'}\n`;
+    if (localChanges.staged) msg += `   • Staged changes present\n`;
+    if (localChanges.unstaged) msg += `   • Unstaged changes present\n`;
+    msg += `   → Consider committing or stashing before new edits\n`;
+    issues.push(msg);
+  }
+
+  if (issues.length === 0) return null;
+
+  const header = severity === 'critical'
+    ? `\n⛔ [CONFLICT-CHECKER] CRITICAL: Multiple conflict sources detected!`
+    : `\n⚠️ [CONFLICT-CHECKER] Potential conflicts detected`;
+
+  return {
+    severity,
+    message: header + '\n' + `File: ${path.relative(projectDir, filePath)}\n` + issues.join('')
+  };
+}
+
+/**
+ * Main hook execution
+ */
+function main() {
+  try {
+    // Skip if disabled
+    if (conflictMode === 'skip') {
+      process.exit(0);
+    }
+
+    // Read hook input
+    let input = '';
+    try {
+      input = fs.readFileSync(0, 'utf-8').trim();
+    } catch {
+      process.exit(0);
+    }
+
+    if (!input) {
+      process.exit(0);
+    }
+
+    const payload = JSON.parse(input);
+    const toolName = payload.tool_name;
+    const toolInput = payload.tool_input || {};
+
+    // Only check for Edit and Write
+    if (!['Edit', 'Write'].includes(toolName)) {
+      process.exit(0);
+    }
+
+    const filePath = toolInput.file_path || toolInput.path;
+    if (!filePath) {
+      process.exit(0);
+    }
+
+    // Skip non-existent files for Write (new file creation)
+    const fileExists = fs.existsSync(filePath);
+    if (toolName === 'Write' && !fileExists) {
+      // New file - only check WIP for directory conflicts
+      process.exit(0);
+    }
+
+    // Run all checks
+    const wipConflicts = checkWipConflicts(filePath);
+    const remoteChanges = checkRemoteChanges(filePath);
+    const localChanges = checkLocalChanges(filePath);
+
+    const report = buildConflictReport(filePath, wipConflicts, remoteChanges, localChanges);
+
+    if (report) {
+      console.log(report.message);
+
+      // Block on critical if mode is 'block'
+      if (conflictMode === 'block' && report.severity === 'critical') {
+        console.log('\n❌ Operation blocked due to critical conflicts.');
+        console.log('   Set CONFLICT_CHECK_MODE=warn to allow with warnings.\n');
+        process.exit(2);
+      }
+
+      // Add guidance
+      console.log('\n📋 Recommendations:');
+      console.log('   1. Run `/sync` to see full team activity');
+      console.log('   2. Coordinate with active developers');
+      console.log('   3. Pull latest changes: git pull');
+      console.log('   4. Proceed with caution\n');
+    }
+
+    process.exit(0);
+  } catch (error) {
+    // Fail-open
+    console.error(`[CONFLICT-CHECKER] Error: ${error.message}`);
+    process.exit(0);
+  }
+}
+
+// Export for testing
+module.exports = {
+  checkRemoteChanges,
+  checkLocalChanges,
+  checkWipConflicts,
+  getActiveModules,
+  buildConflictReport
+};
+
+if (require.main === module) {
+  main();
+}
