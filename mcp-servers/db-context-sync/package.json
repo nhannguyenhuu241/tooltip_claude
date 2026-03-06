@@ -45,14 +45,7 @@
     "examples/",
     "README.md",
     "LICENSE",
-    "QUICKSTART.md",
-    "FEATURES_SUMMARY.md",
-    "ARCHITECTURE.md",
-    "COMPLETE_WORKFLOW.md",
-    "DB_HOOKS_GUIDE.md",
-    "DIRECT_DATABASE_SCANNING.md",
-    "SQL_GENERATION.md",
-    "APPROACHES_COMPARISON.md"
+    "QUICKSTART.md"
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
